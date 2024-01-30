@@ -178,19 +178,18 @@ function init() {
     canvas.width = window.innerWidth
     canvas.height = window.innerHeight
     
-    for (let i = -5; i <= 5; i++) {
-        for (let j = -5; j <= 5; j++) {
+    let width = 5
+    let height = 5
+    for (let i = -height; i <= height; i++) {
+        for (let j = -width; j <= width; j++) {
             let chunk = new Chunk(i, j)
             chunks[`${i},${j}`] = chunk
             
-
             for (let y = 0; y < CHUNKSIZE; y++) {
                 for (let x = 0; x < CHUNKSIZE; x++) {
-                    //let value = getPerlinNoise(semiChunk * ~~((chunk.x * CHUNKSIZE + x) / semiChunk),
-                    //                            semiChunk * ~~((chunk.y * CHUNKSIZE + y) / semiChunk), 100, 5)
-                    //if (value > 0.55) chunk.particles[`${x},${y}`] = new ImmovableSolid(x, y)
-
-                    if (y === 5 && x === 2) chunk.particles[`${x},${y}`] = new ImmovableSolid(x, y)
+                    let value = advancedPerlinNoise((chunk.x * CHUNKSIZE + x),
+                    (chunk.y * CHUNKSIZE + y), 100, .7, 40, 2)
+                    if (value > 0.5) chunk.particles[`${x},${y}`] = new ImmovableSolid(x, y)
                 }
             }
         }

@@ -314,3 +314,30 @@ function getPerlinNoise(x, y, perlinSeed, resolution) {
     noise.seed(perlinSeed)
     return (noise.perlin2(x / resolution, y / resolution) + 1) / 2
 }
+
+
+/**
+ * @param {number} amplitude Differnce between maximum and minimum of the noise
+ * @param {number} frequency How fast the noise changes
+ * @param {number} octaveCount Amount of iterations
+ * @param {number} persistance ow much less the next iteration counts
+ * @param {number} lacurarity How much more finer the details get the next iteration
+ */
+function advancedPerlinNoise(x, y, perlinSeed, amplitude = 1,
+frequency = 1, octaveCount = 1, persistance = 0.5, lacurarity = 2) {
+
+    noise.seed(perlinSeed)
+    let value = 0
+
+    for (let i = 0; i < octaveCount; i++) {
+        value += amplitude * (noise.perlin2(x / frequency, y / frequency) + 1) / 2
+        amplitude *= persistance
+        frequency *= lacurarity
+    }
+
+    return value
+}
+
+function getLayeredPerlinNoise(x, y, perlinSeed, amplitudes, octaves) {
+
+}
