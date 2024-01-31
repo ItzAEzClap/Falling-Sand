@@ -4,52 +4,86 @@ class Particle {
         this.y = y
     }
 
-    update() { }
-
-    draw(x, y) {
-        c.fillStyle = `rgb(${this.col[0]}, ${this.col[1]}, ${this.col[2]}`
-        c.fillRect(this.x + x, this.y + y, 1, 1)
+    move(newX, newY) {
+        chunks[`${~~(newX / CHUNKSIZE)},${~~(newY / CHUNKSIZE)}`].particles[mod(newX, CHUNKSIZE) + mod(newY, CHUNKSIZE) * CHUNKSIZE] = this
+        chunks[`${~~(this.x / CHUNKSIZE)},${~~(this.y / CHUNKSIZE)}`].particles[mod(this.x, CHUNKSIZE) + mod(this.y, CHUNKSIZE) * CHUNKSIZE] = undefined
+        this.x = newX
+        this.y = newY
     }
+
+    switch(newChunk, newX, newY) {
+        chunks[`${this.chunkX},${this.chunkY}`].particles[this.x + this.y * CHUNKSIZE] = newChunk.particles[newX + newY * CHUNKSIZE]
+        newChunk.particles[newX + newY * CHUNKSIZE] = this
+    }
+
 }
 
-
-class Sand extends Particle {
+class Solid extends Particle {
     constructor(x, y) {
         super(x, y)
-        this.col = "rgb(194, 178, 128)"
     }
 
-    update() {
-        if (this.y + 1 >= rows) return
-
-        let prevX = x
-        let prevY = y
-
-        
-        if (!positions[`${this.x},${this.y + 1}`]) { // Down
-            this.move(0, 1)
-        } else { // Left Right
-            let dir = Math.random() > 0.5 ? -1 : 1
-            let left = positions[`${this.x - dir},${this.y + 1}`]
-            let right = positions[`${this.x + dir},${this.y + 1}`]
-
-            if (!left) this.move(-dir, 0)
-            else if (!right) this.move(dir, 0)
+    step() {
+        // Down
+        let down = getPartical(this.x, this.y + 1)
+        //console.log(down)
+        if (!down) {
+            this.move(this.x, this.y + 1)
+            return true
+        } else if (down instanceof Liquid) {
+            this.switch(this.x, this.y + 1)
+            return true
         }
-    }
 
-    draw() {
-        c.beginPath()
-        c.fillStyle = this.col
-        c.fillRect(this.x * tileWidth, this.y * tileWidth, tileWidth, tileWidth)
-        c.stroke()
+        return false
+        console.trace(this.y, coords[2])
+        down = coords[0].particles[coords[1] + coords[2] * CHUNKSIZE]
+
+        if (!down) {
+            this.move(coords[0], coords[1], coords[2])
+            return true
+        } else if (down instanceof Liquid) {
+            this.switch(coords[0], 0, 1)
+            return true
+        }
+        
+    }
+}
+
+class Liquid extends Particle {
+    constructor(x, y) {
+        super(x, y)
     }
 }
 
 
-class ImmovableSolid extends Particle {
+
+
+
+
+
+
+
+
+
+class Sand extends Solid {
+    constructor(x, y) {
+        super(x, y)
+        this.colData = [194, 178, 128]
+    }
+}
+
+
+class ImmovableSolid extends Solid {
     constructor(x, y) {
         super(x, y)
         this.colData = [30, 30, 30]
     }
+
+}
+
+function getPartical(x, y) {
+    let cx = ~~(x / CHUNKSIZE) + (x < 0 ? -1 : 0)
+    let cy = ~~(y / CHUNKSIZE) + (y < 0 ? -1 : 0)
+    return chunks[`${cx},${cy}`].particles[mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE]
 }

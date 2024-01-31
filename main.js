@@ -20,11 +20,12 @@ canvas.height = STANDARDY * RENDERSCALE
 
 
 
-
+let b = 60
 let a = 0
 let player = new Player()
 let prev = 0
-function animate() {
+
+async function animate() {
     requestAnimationFrame(animate)
     let dt = performance.now() - prev
     a += dt
@@ -32,17 +33,20 @@ function animate() {
 
     player.move()
 
-    if (a > 1000 / 20) { // Update
-        update()
-        a -= 1000 / 20
-    }
+    update()
     draw()
+
+    b = 1000 / dt
 }
 
 function update() {
+    let i = 0
     for (let chunk of Object.values(chunks)) {
-        if (chunk.updateNextFrame) chunk.update()
+        if (!chunk.updateNextFrame) continue
+        chunk.update()
+        i++
     }
+    //console.log(`Currently updating ${i} chunks`)
 }
 
 function draw() {
@@ -65,22 +69,27 @@ function draw() {
         }
     }
     
-    
+    c.beginPath()
+    c.lineWidth = 1
+    c.strokeStyle = "black"
+    c.rect(mouse.x - 5, mouse.y - 5, 10, 10)
+    c.stroke()
 
     
+    
 
 
-
-    console.log(`Currently drawing ${i} chunks`)
+    //console.log(`Currently drawing ${i} chunks`)
 
     // Draw upscale
     renderC.drawImage(canvas, 0, 0, renderCanvas.width, renderCanvas.height)
+    renderC.drawText(`${~~b}`, 200, 200, "60px Arial")
 
-    renderC.beginPath()
-    renderC.lineWidth = 4
-    renderC.strokeStyle = "black"
-    renderC.rect((mouse.x - 20), (mouse.y - 20), 40, 40)
-    renderC.stroke()
+    //renderC.beginPath()
+    //renderC.lineWidth = 4
+    //renderC.strokeStyle = "black"
+    //renderC.rect((mouse.x - 20), (mouse.y - 20), 40, 40)
+    //renderC.stroke()
 }
 
 function init() {
@@ -99,33 +108,40 @@ function init() {
                     let value = getPerlinNoise(chunk.x * CHUNKSIZE + x, chunk.y * CHUNKSIZE + y, 100, 40)
                     //let value = advancedPerlinNoise((chunk.x * CHUNKSIZE + x),
                     //(chunk.y * CHUNKSIZE + y), 100, 1, 40, 1)
-                    if (value > 0.5) chunk.particles[x + y * CHUNKSIZE] = new ImmovableSolid(x, y)
+                    if (value > 0.5) chunk.particles[x + y * CHUNKSIZE] = new ImmovableSolid(x + j * CHUNKSIZE, y + i * CHUNKSIZE)
                 }
             }
         }
     }
     
-    
+    window.onmousemove = (e) => { mouse.x = e.clientX / scale; mouse.y = e.clientY / scale }
     animate()
 }
 
 
-window.onmousedown = (e) => {
-    switch (tool) {
-        case 0:
-            for (let y = 0; y < 40 / RENDERSCALE; y++) {
-                for (let x = 0; x < 40 / RENDERSCALE; x++) {
-                    let chunk = chunks[`${~~(x / CHUNKSIZE)},${~~(y / CHUNKSIZE)}`]
-                    chunk.particles
-                }
-            }
-            break
-        default:
-            break
+
+window.onmousedown = () => {
+    let offX = ~~(mouse.x + player.x)
+    let offY = ~~(mouse.y + player.y)
+
+
+    for (let y = offY - 5; y < offY + 5; y++) {
+        for (let x = offX - 5; x < offX + 5; x++) {
+            let chunkX = ~~(x / CHUNKSIZE) + (x < 0 ? - 1 : 0)
+            let chunkY = ~~(y / CHUNKSIZE) + (y < 0 ? - 1 : 0)
+            let chunk = chunks[`${chunkX},${chunkY}`]
+
+            let partical = chunk.particles[mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE]
+            if (!partical) chunk.particles[mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE] = new Sand(x , y)
+
+            chunk.hasUpdatedFrameBuffer = false
+            chunk.updateNextFrame = true
+        }
     }
+    
+    return
 }
 
-window.onmousemove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY }
 window.onkeydown = (e) => keys_pressed[e.key.toLowerCase()] = true
 window.onkeyup = (e) => keys_pressed[e.key.toLowerCase()] = false
 window.onresize = fixCanvas

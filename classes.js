@@ -47,21 +47,34 @@ class Chunk {
         this.hasUpdatedFrameBuffer = true
     }
 
-    checkDown() {
-
+    tempFix() {
+        this.hasUpdatedFrameBuffer = false
+        this.updateNextFrame = true
+        if (chunks[`${this.x + 1},${this.y}`]) chunks[`${this.x + 1},${this.y}`].updateNextFrame = true
+        if (chunks[`${this.x - 1},${this.y}`]) chunks[`${this.x - 1},${this.y}`].updateNextFrame = true
+        if (chunks[`${this.x},${this.y + 1}`]) chunks[`${this.x},${this.y + 1}`].updateNextFrame = true
+        if (chunks[`${this.x},${this.y - 1}`]) chunks[`${this.x},${this.y - 1}`].updateNextFrame = true
     }
 
-    checkHorizontal() {
-
-    }
 
     update() {
+        if (!this.updateNextFrame) return
+
         this.updateNextFrame = false
-        for (const particle of this.particles) {
-            if (!particle || particle.constructor.name === "ImmovableSolid") continue
-            
-            particle.update()
+        let updateParticals = this.particles.filter(partical => partical && partical.constructor.name !== "ImmovableSolid")
+
+        let start = Math.random() > 0.5 ? 1 : 0
+
+        for (let i = start; i < updateParticals.length; i += 2) {
+            let result = updateParticals[i].step()
+            if (result) this.tempFix()
         }
+        for (let i = 1 - start; i < updateParticals.length; i += 2) {
+            let result = updateParticals[i].step()
+            if (result) this.tempFix()
+        }
+
+
     }
 
     draw() {
