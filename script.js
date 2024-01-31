@@ -1,15 +1,52 @@
+const canvas = document.createElement("canvas")
+const c = canvas.getContext("2d")
+CanvasRenderingContext2D.prototype.drawText = function (text, x, y, fontSize, align, color, shadow) {
+    this.font = fontSize + "px verdanai";
+    this.fillStyle = "gray";
+    this.shadowBlur = (shadow?.blur == undefined ? 0 : shadow?.blur);
+    this.shadowColor = (shadow?.color == undefined ? "white" : shadow?.color);
+    this.textAlign = (align != undefined) ? align : "left";
+    this.fillText(text, x, y)
+    this.shadowBlur = 0;
+    this.fillStyle = (color !== undefined ? color : "black");
+    this.fillText(text, x - 1, y - 1)
+}
+
+const renderCanvas = document.createElement("canvas")
+const renderC = renderCanvas.getContext("2d")
+document.body.appendChild(renderCanvas)
+renderCanvas.style.zIndex = "0"
+
+
+function fixCanvas() {
+    if (window.innerWidth * STANDARDY > window.innerHeight * STANDARDX) {
+        renderCanvas.width = window.innerHeight * STANDARDX / STANDARDY;
+        renderCanvas.height = window.innerHeight;
+        scale = renderCanvas.width / canvas.width;
+    } else {
+        renderCanvas.width = window.innerWidth;
+        renderCanvas.height = window.innerWidth * STANDARDY / STANDARDX;
+        scale = renderCanvas.height / canvas.height;
+    }
+}
+
+
 const FPS = 60
-const CHUNKSIZE = 16
-const TILESIZE = 10
+const CHUNKSIZE = 32
 let keys_pressed = {}
 let chunks = {}
+let mouse = { x: 0, y: 0 }
 
-const canvas = document.querySelector("canvas")
-const c = canvas.getContext("2d")
+const STANDARDX = 16
+const STANDARDY = 9
+const RENDERSCALE = 15
+canvas.width = STANDARDX * RENDERSCALE
+canvas.height = STANDARDY * RENDERSCALE
+
 class Player {
     constructor(x, y) {
-        this.x = x
-        this.y = y
+        this.x = x || 0
+        this.y = y || 0
         this.vel = 5
     }
 
@@ -27,45 +64,58 @@ class Player {
             this.y += this.vel
         }
     }
-
-    draw() {
-        c.fillStyle = "black"
-        c.beginPath()
-        c.arc(canvas.width / 2 - 5, canvas.height / 2 - 5, 10, 0, 2*Math.PI)
-        c.fill()
-    }
 }
 
 class Chunk {
     constructor(x, y) {
         this.x = x
         this.y = y
+        this.frameBuffer = new ImageData(CHUNKSIZE, CHUNKSIZE)
         this.particles = {}
+        this.hasUpdatedFrameBuffer = false
+
         this.updateNextFrame = true
     }
+    
+    buildFrameBuffer() {
+        for (let y = 0; y < CHUNKSIZE; y++) {
+            for (let x = 0; x < CHUNKSIZE; x++) {
+                let i = (y * CHUNKSIZE + x) * 4
+                let pixel = this.particles[`${x},${y}`]
+                this.frameBuffer.data[i] = pixel?.colData[0] ?? 255
+                this.frameBuffer.data[i + 1] = pixel?.colData[1] ?? 255
+                this.frameBuffer.data[i + 2] = pixel?.colData[2] ?? 255
+                this.frameBuffer.data[i + 3] = 255
+            }
+        }
+        this.hasUpdatedFrameBuffer = true
+    }
+
 
     update() {
+        this.updateNextFrame = false
         for (let particle of Object.values(this.particles)) {
+            if (particle.constructor.name === "ImmovableSolid") continue
+            let x = particle.x
+            let y = particle.y
             particle.update()
         }
+
+        if (!this.hasUpdatedFrameBuffer) this.buildFrameBuffer()
     }
 
     draw() {
-        let x = this.x * CHUNKSIZE * TILESIZE - player.x + canvas.width / 2
-        let y = this.y * CHUNKSIZE * TILESIZE - player.y + canvas.height / 2
+        let x = ~~(this.x * CHUNKSIZE - player.x)
+        let y = ~~(this.y * CHUNKSIZE - player.y)
+        c.putImageData(this.frameBuffer, x, y)
+
+
         c.beginPath()
         c.strokeStyle = "lightgrey"
-        c.lineWidth = 5
-        c.rect(x, y, CHUNKSIZE * TILESIZE, CHUNKSIZE * TILESIZE)
-        c.stroke()
-
         c.lineWidth = 1
-        c.strokeText(`${this.x}, ${this.y}`, x + CHUNKSIZE * TILESIZE / 2, y + CHUNKSIZE * TILESIZE / 2)
+        c.rect(x, y, CHUNKSIZE, CHUNKSIZE)
         c.stroke()
-
-        for (let particle of Object.values(this.particles)) {
-            particle.draw(x, y)
-        }
+        c.drawText(`${this.x}, ${this.y}`, x + CHUNKSIZE / 2, y + CHUNKSIZE / 2, 14, "center")
     }
 }
 
@@ -75,17 +125,11 @@ class Particle {
         this.y = y
     }
 
-    getNext(chunkX, chunkY, dx, dy) {
-        let x = this.x + dx
-        let y = this.y + dy
+    update() { }
 
-        return chunks[`${chunkX},${chunkY}`].particles[`${x},${y}`] ||
-                chunks[`${chunkX + x % CHUNKSIZE},${chunkY + y % CHUNKSIZE}`]
-                    .particles[`${(x + CHUNKSIZE) % CHUNKSIZE},${(y + CHUNKSIZE) % CHUNKSIZE}`]
-    }
-
-    move(dx, dy) {
-
+    draw(x, y) {
+        c.fillStyle = `rgb(${this.col[0]}, ${this.col[1]}, ${this.col[2]}`
+        c.fillRect(this.x + x, this.y + y, 1, 1)
     }
 }
 
@@ -122,23 +166,17 @@ class Sand extends Particle {
     }
 }
 
-class ImmovableSolid {
+
+class ImmovableSolid extends Particle {
     constructor(x, y) {
-        this.x = x
-        this.y = y
-    }
-
-    update() {}
-
-    draw(x, y) {
-        c.fillStyle = "black"
-        c.fillRect(this.x * TILESIZE + x, this.y * TILESIZE + y, TILESIZE, TILESIZE)
+        super(x, y)
+        this.colData = [30, 30, 30]
     }
 }
 
 
 let a = 0
-let player = new Player(40, 20)
+let player = new Player()
 let prev = 0
 function animate() {
     requestAnimationFrame(animate)
@@ -157,26 +195,46 @@ function animate() {
 
 function update() {
     for (let chunk of Object.values(chunks)) {
-        if (!chunk.updateNextFrame) continue
-        chunk.update()
+        if (chunk.updateNextFrame) chunk.update()
     }
 }
 
 function draw() {
-    c.fillStyle = "white"
-    c.fillRect(0, 0, canvas.width, canvas.height)
-    player.draw()
+    // Clear
+    renderC.imageSmoothingEnabled = false
+    renderC.clearRect(0, 0, renderCanvas.width, renderCanvas.height)
+    c.clearRect(0, 0, canvas.width, canvas.height)
 
-    let drawingChunks = Object.values(chunks).filter(e => e)
+    // Draw
+    let i = 0
+    let offX = ~~(player.x / CHUNKSIZE)
+    let offY = ~~(player.y / CHUNKSIZE)
+    for (let y = -1; y < STANDARDY * RENDERSCALE / CHUNKSIZE + 1; y++) {
+        for (let x = -1; x < STANDARDX * RENDERSCALE / CHUNKSIZE + 1; x++) {
+            let chunk = chunks[`${x + offX},${y + offY}`];
+            if (chunk) {
+                chunk?.draw()
+                i++
+            }
+        }
+    }
+    
+    
 
-    for (let chunk of drawingChunks) if (chunk.updateNextFrame) chunk.draw()
-    console.log(`Currently drawing ${drawingChunks.length} chunks`)
+
+    
+
+
+
+    console.log(`Currently drawing ${i} chunks`)
+
+    // Draw upscale
+    renderC.drawImage(canvas, 0, 0, renderCanvas.width, renderCanvas.height)
 }
 
 function init() {
     prev = performance.now()
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
+    fixCanvas()
     
     let width = 5
     let height = 5
@@ -187,8 +245,9 @@ function init() {
             
             for (let y = 0; y < CHUNKSIZE; y++) {
                 for (let x = 0; x < CHUNKSIZE; x++) {
-                    let value = advancedPerlinNoise((chunk.x * CHUNKSIZE + x),
-                    (chunk.y * CHUNKSIZE + y), 100, .7, 40, 2)
+                    let value = getPerlinNoise(chunk.x * CHUNKSIZE + x, chunk.y * CHUNKSIZE + y, 100, 40)
+                    //let value = advancedPerlinNoise((chunk.x * CHUNKSIZE + x),
+                    //(chunk.y * CHUNKSIZE + y), 100, 1, 40, 1)
                     if (value > 0.5) chunk.particles[`${x},${y}`] = new ImmovableSolid(x, y)
                 }
             }
@@ -201,6 +260,6 @@ function init() {
     animate()
 }; init()
 
-
+window.onmousemove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY }
 window.onkeydown = (e) => keys_pressed[e.key.toLowerCase()] = true
 window.onkeyup = (e) => keys_pressed[e.key.toLowerCase()] = false
