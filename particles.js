@@ -21,13 +21,13 @@ class Particle {
         let newChunk = getChunk(newX, newY)
         let oldChunk = getChunk(this.x, this.y)
         let pOff = mod(newX, CHUNKSIZE) + mod(newY, CHUNKSIZE) * CHUNKSIZE
+        let thisOff = mod(this.x, CHUNKSIZE) + mod(this.y, CHUNKSIZE) * CHUNKSIZE
 
         newChunk.particles[pOff].x = this.x
         newChunk.particles[pOff].y = this.y
         this.x = newX
         this.y = newY
-
-        oldChunk.particles[mod(this.x, CHUNKSIZE) + mod(this.y, CHUNKSIZE) * CHUNKSIZE] = newChunk.particles[pOff]
+        oldChunk.particles[thisOff] = newChunk.particles[pOff]
         newChunk.particles[pOff] = this
     }
 

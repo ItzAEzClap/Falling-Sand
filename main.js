@@ -13,7 +13,7 @@ const FPS = 60
 const MOUSESIZE = 10
 const mouse = { x: 0, y: 0, down: false }
 
-let particleType = 1
+let particleType = 2
 const player = new Player()
 const keys_pressed = {}
 const chunks = {}
