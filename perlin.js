@@ -361,7 +361,3 @@ CanvasRenderingContext2D.prototype.drawText = function (text, x, y, fontSize, al
     this.fillStyle = (color !== undefined ? color : "black");
     this.fillText(text, x - 1, y - 1)
 }
-
-function mod(n, base) {
-    return ((n % base) + base) % base
-}

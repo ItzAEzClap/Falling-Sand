@@ -60,17 +60,19 @@ class Chunk {
     update() {
         if (!this.updateNextFrame) return
 
+        this.drawBorder = true
+
         this.updateNextFrame = false
         let updateParticals = this.particles.filter(partical => partical && partical.constructor.name !== "ImmovableSolid")
 
         let start = Math.random() > 0.5 ? 1 : 0
 
         for (let i = start; i < updateParticals.length; i += 2) {
-            let result = updateParticals[i].step()
+            let result = updateParticals[updateParticals.length - i - 1].step()
             if (result) this.tempFix()
         }
         for (let i = 1 - start; i < updateParticals.length; i += 2) {
-            let result = updateParticals[i].step()
+            let result = updateParticals[updateParticals.length - i - 1].step()
             if (result) this.tempFix()
         }
 
@@ -83,13 +85,16 @@ class Chunk {
         let x = ~~(this.x * CHUNKSIZE - player.x)
         let y = ~~(this.y * CHUNKSIZE - player.y)
         c.putImageData(this.frameBuffer, x, y)
-
-
+        c.drawText(`${this.x}, ${this.y}`, x + CHUNKSIZE / 2, y + CHUNKSIZE / 2, 14, "center")
         c.beginPath()
         c.strokeStyle = "lightgrey"
         c.lineWidth = 1
         c.rect(x, y, CHUNKSIZE, CHUNKSIZE)
         c.stroke()
-        c.drawText(`${this.x}, ${this.y}`, x + CHUNKSIZE / 2, y + CHUNKSIZE / 2, 14, "center")
+        if (!this.drawBorder) return
+
+        this.drawBorder = false
+
+        
     }
 }

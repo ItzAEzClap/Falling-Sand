@@ -9,8 +9,8 @@ const FPS = 60
 const CHUNKSIZE = 32
 let keys_pressed = {}
 let chunks = {}
-let mouse = { x: 0, y: 0 }
-let tool = 0
+let mouse = { x: 0, y: 0, down: false }
+let particleType = 0
 
 const STANDARDX = 16
 const STANDARDY = 9
@@ -31,8 +31,10 @@ async function animate() {
     a += dt
     prev += dt
 
-    player.move()
+    if (mouse.down) spawnCluster()
 
+
+    player.move()
     update()
     draw()
 
@@ -40,13 +42,10 @@ async function animate() {
 }
 
 function update() {
-    let i = 0
     for (let chunk of Object.values(chunks)) {
         if (!chunk.updateNextFrame) continue
         chunk.update()
-        i++
     }
-    //console.log(`Currently updating ${i} chunks`)
 }
 
 function draw() {
@@ -56,16 +55,12 @@ function draw() {
     c.clearRect(0, 0, canvas.width, canvas.height)
 
     // Draw
-    let i = 0
     let offX = ~~(player.x / CHUNKSIZE)
     let offY = ~~(player.y / CHUNKSIZE)
     for (let y = -1; y < STANDARDY * RENDERSCALE / CHUNKSIZE + 1; y++) {
         for (let x = -1; x < STANDARDX * RENDERSCALE / CHUNKSIZE + 1; x++) {
             let chunk = chunks[`${x + offX},${y + offY}`];
-            if (chunk) {
-                chunk?.draw()
-                i++
-            }
+            if (chunk) chunk.draw()
         }
     }
     
@@ -76,11 +71,6 @@ function draw() {
     c.stroke()
 
     
-    
-
-
-    //console.log(`Currently drawing ${i} chunks`)
-
     // Draw upscale
     renderC.drawImage(canvas, 0, 0, renderCanvas.width, renderCanvas.height)
     renderC.drawText(`${~~b}`, 200, 200, "60px Arial")
@@ -120,7 +110,7 @@ function init() {
 
 
 
-window.onmousedown = () => {
+function spawnCluster() {
     let offX = ~~(mouse.x + player.x)
     let offY = ~~(mouse.y + player.y)
 
@@ -131,17 +121,20 @@ window.onmousedown = () => {
             let chunkY = ~~(y / CHUNKSIZE) + (y < 0 ? - 1 : 0)
             let chunk = chunks[`${chunkX},${chunkY}`]
 
+            if (!chunk) continue
             let partical = chunk.particles[mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE]
-            if (!partical) chunk.particles[mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE] = new Sand(x , y)
-
+            if (partical) continue 
+            
+            chunk.particles[mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE] = new Sand(x , y)
             chunk.hasUpdatedFrameBuffer = false
             chunk.updateNextFrame = true
+            
         }
-    }
-    
-    return
+    }    
 }
 
+window.onmousedown = () => mouse.down = true
+window.onmouseup = () => mouse.down = false
 window.onkeydown = (e) => keys_pressed[e.key.toLowerCase()] = true
 window.onkeyup = (e) => keys_pressed[e.key.toLowerCase()] = false
 window.onresize = fixCanvas
