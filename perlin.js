@@ -337,27 +337,3 @@ frequency = 1, octaveCount = 1, persistance = 0.5, lacurarity = 2) {
 
     return value
 }
-
-function fixCanvas() {
-    if (window.innerWidth * STANDARDY > window.innerHeight * STANDARDX) {
-        renderCanvas.width = window.innerHeight * STANDARDX / STANDARDY;
-        renderCanvas.height = window.innerHeight;
-        scale = renderCanvas.width / canvas.width;
-    } else {
-        renderCanvas.width = window.innerWidth;
-        renderCanvas.height = window.innerWidth * STANDARDY / STANDARDX;
-        scale = renderCanvas.height / canvas.height;
-    }
-}
-
-CanvasRenderingContext2D.prototype.drawText = function (text, x, y, fontSize, align, color, shadow) {
-    this.font = fontSize + "px verdanai";
-    this.fillStyle = "gray";
-    this.shadowBlur = (shadow?.blur == undefined ? 0 : shadow?.blur);
-    this.shadowColor = (shadow?.color == undefined ? "white" : shadow?.color);
-    this.textAlign = (align != undefined) ? align : "left";
-    this.fillText(text, x, y)
-    this.shadowBlur = 0;
-    this.fillStyle = (color !== undefined ? color : "black");
-    this.fillText(text, x - 1, y - 1)
-}

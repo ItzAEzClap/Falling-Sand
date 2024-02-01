@@ -5,63 +5,52 @@ const renderC = renderCanvas.getContext("2d")
 document.body.appendChild(renderCanvas)
 renderCanvas.style.zIndex = "0"
 
-const FPS = 60
-const CHUNKSIZE = 32
-let keys_pressed = {}
-let chunks = {}
-let mouse = { x: 0, y: 0, down: false }
-let particleType = 1
-
 const STANDARDX = 16
 const STANDARDY = 9
 const RENDERSCALE = 15
-canvas.width = STANDARDX * RENDERSCALE
-canvas.height = STANDARDY * RENDERSCALE
 
+const FPS = 60
+const MOUSESIZE = 10
+const mouse = { x: 0, y: 0, down: false }
 
+let particleType = 1
+const player = new Player()
+const keys_pressed = {}
+const chunks = {}
+const CHUNKSIZE = 32
+const GRIDWITDH = 5
+const GRIDHEIGHT = 5
 
-let b = 60
-let a = 0
-let player = new Player()
-let prev = 0
-
+let currentFPS = 60
+let prevTime = 0
 async function animate() {
     requestAnimationFrame(animate)
-    let dt = performance.now() - prev
-    a += dt
-    prev += dt
+    let dt = performance.now() - prevTime
+    prevTime += dt
 
-    if (mouse.down) spawnCluster()
-
-
-    player.move()
     update()
     draw()
-
-    b = 1000 / dt
+    currentFPS = 1000 / dt
 }
 
 function update() {
-    let updateChunks = Object.values(chunks).filter(chunk => chunk.updateNextFrame).sort((a, b) => b.y - a.y)
-    
-    for (let chunk of updateChunks) {
-        chunk.update()
-    }
+    player.move()
+    if (mouse.down) spawnCluster()
 
+    let updateChunks = Object.values(chunks).filter(chunk => chunk.updateNextFrame).sort((a, b) => b.y - a.y)
+    for (let chunk of updateChunks) chunk.update()
 }
 
 function draw() {
-    // Clear
     renderC.imageSmoothingEnabled = false
     renderC.clearRect(0, 0, renderCanvas.width, renderCanvas.height)
     c.clearRect(0, 0, canvas.width, canvas.height)
 
-    // Draw
     let offX = ~~(player.x / CHUNKSIZE)
     let offY = ~~(player.y / CHUNKSIZE)
     for (let y = -1; y < STANDARDY * RENDERSCALE / CHUNKSIZE + 1; y++) {
         for (let x = -1; x < STANDARDX * RENDERSCALE / CHUNKSIZE + 1; x++) {
-            let chunk = chunks[`${x + offX},${y + offY}`];
+            let chunk = chunks[`${x + offX},${y + offY}`]
             if (chunk) chunk.draw()
         }
     }
@@ -71,27 +60,19 @@ function draw() {
     c.strokeStyle = "black"
     c.rect(mouse.x - MOUSESIZE / 2, mouse.y - MOUSESIZE / 2, MOUSESIZE, MOUSESIZE)
     c.stroke()
-
     
     // Draw upscale
     renderC.drawImage(canvas, 0, 0, renderCanvas.width, renderCanvas.height)
-    renderC.drawText(`${~~b}`, 200, 200, "60px Arial")
-
-    //renderC.beginPath()
-    //renderC.lineWidth = 4
-    //renderC.strokeStyle = "black"
-    //renderC.rect((mouse.x - 20), (mouse.y - 20), 40, 40)
-    //renderC.stroke()
+    renderC.drawText(`${~~currentFPS}`, 50, 50, "60px Arial")
 }
 
 function init() {
-    prev = performance.now()
+    canvas.width = STANDARDX * RENDERSCALE
+    canvas.height = STANDARDY * RENDERSCALE
     fixCanvas()
     
-    let width = 5
-    let height = 5
-    for (let i = -height; i <= height; i++) {
-        for (let j = -width; j <= width; j++) {
+    for (let i = -GRIDHEIGHT; i <= GRIDHEIGHT; i++) {
+        for (let j = -GRIDWITDH; j <= GRIDWITDH; j++) {
             let chunk = new Chunk(i, j)
             chunks[`${i},${j}`] = chunk
             
@@ -106,46 +87,11 @@ function init() {
         }
     }
     
+    prevTime = performance.now()
     window.onmousemove = (e) => { mouse.x = e.clientX / scale; mouse.y = e.clientY / scale }
     animate()
 }
 
-
-
-const MOUSESIZE = 3
-function spawnCluster() {
-    let offX = ~~(mouse.x + player.x)
-    let offY = ~~(mouse.y + player.y)
-
-    for (let y = ~~(offY - MOUSESIZE / 2); y < offY + MOUSESIZE / 2; y++) {
-        for (let x = ~~(offX - MOUSESIZE / 2); x < offX + MOUSESIZE / 2; x++) {
-            let chunk = getChunk(x, y)
-
-            if (!chunk) continue
-            let partical = chunk.particles[mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE]
-            if (partical) continue 
-
-            switch (particleType) {
-                case 1:
-                    partical = new Sand()
-                    break
-                case 2:
-                    partical = new Water()
-                    break
-            }
-            partical.x = x
-            partical.y = y
-
-            chunk.particles[mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE] = partical
-            chunk.hasUpdatedFrameBuffer = false
-            chunk.updateNextFrame = true
-            
-        }
-    }    
-}
-
-window.onmousedown = () => mouse.down = true
-window.onmouseup = () => mouse.down = false
 window.onkeydown = (e) => {
     if (e.code.search(/Digit/) !== -1) {
         particleType = parseInt(e.key)
@@ -155,3 +101,5 @@ window.onkeydown = (e) => {
 window.onkeyup = (e) => keys_pressed[e.key.toLowerCase()] = false
 window.onresize = fixCanvas
 window.onload = init
+window.onmousedown = () => mouse.down = true
+window.onmouseup = () => mouse.down = false

@@ -1,35 +1,15 @@
-class Player {
-    constructor(x, y) {
-        this.x = x || 0
-        this.y = y || 0
-        this.vel = 5
-    }
-
-    move() {
-        if (keys_pressed["a"]) {
-            this.x -= this.vel
-        }
-        if (keys_pressed["d"]) {
-            this.x += this.vel
-        }
-        if (keys_pressed["w"]) {
-            this.y -= this.vel
-        }
-        if (keys_pressed["s"]) {
-            this.y += this.vel
-        }
-    }
-}
-
 class Chunk {
     constructor(x, y) {
+        // Positions
         this.x = x
         this.y = y
+        this.particles = Array(CHUNKSIZE * CHUNKSIZE)
+
+        // "Frame"
         this.frameBuffer = new ImageData(CHUNKSIZE, CHUNKSIZE)
         this.hasUpdatedFrameBuffer = false
 
-        this.particles = Array(CHUNKSIZE * CHUNKSIZE)
-
+        // Update
         this.updateNextFrame = true
     }
     
@@ -50,42 +30,38 @@ class Chunk {
     tempFix() {
         this.hasUpdatedFrameBuffer = false
         this.updateNextFrame = true
-        if (chunks[`${this.x + 1},${this.y}`]) chunks[`${this.x + 1},${this.y}`].updateNextFrame = true
-        if (chunks[`${this.x - 1},${this.y}`]) chunks[`${this.x - 1},${this.y}`].updateNextFrame = true
-        if (chunks[`${this.x},${this.y + 1}`]) chunks[`${this.x},${this.y + 1}`].updateNextFrame = true
-        if (chunks[`${this.x},${this.y - 1}`]) chunks[`${this.x},${this.y - 1}`].updateNextFrame = true
+
+        let right = chunks[`${this.x + 1},${this.y}`]
+        if (right) right.updateNextFrame = true
+
+        let left = chunks[`${this.x - 1},${this.y}`]
+        if (left) left.updateNextFrame = true
+
+        let down = chunks[`${this.x},${this.y + 1}`]
+        if (down) down.updateNextFrame = true
+
+        let up = chunks[`${this.x},${this.y - 1}`]
+        if (up) up.updateNextFrame = true
     }
 
 
     update() {
         if (!this.updateNextFrame) return
 
-        this.drawBorder = true
-
         this.updateNextFrame = false
-
-
         for (let y = CHUNKSIZE - 1; y >= 0; y--) {
-            for (let x = 0; x < CHUNKSIZE; x += 2) {
+            for (let x = 0; x < CHUNKSIZE; x++) {
                 let p = this.particles[x + y * CHUNKSIZE]
                 if (!p || p instanceof ImmovableSolid) continue
 
                 let result = p.step()
-                if (result) this.tempFix()
+                if (!result) continue
+
+                this.hasUpdatedFrameBuffer = false
+                this.updateNextFrame = true
+                this.tempFix()
             }
         }
-        for (let y = CHUNKSIZE - 1; y >= 0; y--) {
-            for (let x = 1; x < CHUNKSIZE; x += 2) {
-                let p = this.particles[x + y * CHUNKSIZE]
-                if (!p || p instanceof ImmovableSolid) continue
-                
-                let result = p.step()
-                if (result) this.tempFix()
-            }
-        }
-
-
-
     }
 
     draw() {
@@ -96,17 +72,11 @@ class Chunk {
         c.putImageData(this.frameBuffer, x, y)
         c.drawText(`${this.x}, ${this.y}`, x + CHUNKSIZE / 2, y + CHUNKSIZE / 2, 14, "center")
         
-        
         return
         c.beginPath()
         c.strokeStyle = "lightgrey"
         c.lineWidth = 1
         c.rect(x, y, CHUNKSIZE, CHUNKSIZE)
         c.stroke()
-        if (!this.drawBorder) return
-
-        this.drawBorder = false
-
-        
     }
 }

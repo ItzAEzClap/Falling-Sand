@@ -121,6 +121,12 @@ class Water extends Liquid {
     }
 }
 
+// Gas
+class Gas extends Particle {
+    constructor(x, y) {
+        super(x, y)
+    }
+}
 
 
 
@@ -135,6 +141,7 @@ class Water extends Liquid {
 
 
 
+// Functions
 function getPartical(x, y) {
     let chunk = getChunk(x, y)
     if (!chunk) return new ImmovableSolid()
@@ -152,9 +159,40 @@ function getChunk(x, y) {
     else cy = ~~cy
     return chunks[`${cx},${cy}`]
 }
+
 function mod(n, base) {
     return ((n % base) + base) % base // Only positive
 }
 
+function spawnCluster() {
+    let offX = ~~(mouse.x + player.x)
+    let offY = ~~(mouse.y + player.y)
+
+    for (let y = ~~(offY - MOUSESIZE / 2); y < offY + MOUSESIZE / 2; y++) {
+        for (let x = ~~(offX - MOUSESIZE / 2); x < offX + MOUSESIZE / 2; x++) {
+            let chunk = getChunk(x, y)
+
+            if (!chunk) continue
+            let partical = chunk.particles[mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE]
+            if (partical) continue 
+
+            switch (particleType) {
+                case 1:
+                    partical = new Sand()
+                    break
+                case 2:
+                    partical = new Water()
+                    break
+            }
+            partical.x = x
+            partical.y = y
+
+            chunk.particles[mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE] = partical
+            chunk.hasUpdatedFrameBuffer = false
+            chunk.updateNextFrame = true
+            
+        }
+    }    
+}
 
 setTimeout(console.clear, 500)
