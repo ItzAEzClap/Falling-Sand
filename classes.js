@@ -63,18 +63,27 @@ class Chunk {
         this.drawBorder = true
 
         this.updateNextFrame = false
-        let updateParticals = this.particles.filter(partical => partical && partical.constructor.name !== "ImmovableSolid")
 
-        let start = Math.random() > 0.5 ? 1 : 0
 
-        for (let i = start; i < updateParticals.length; i += 2) {
-            let result = updateParticals[updateParticals.length - i - 1].step()
-            if (result) this.tempFix()
+        for (let y = CHUNKSIZE - 1; y >= 0; y--) {
+            for (let x = 0; x < CHUNKSIZE; x += 2) {
+                let p = this.particles[x + y * CHUNKSIZE]
+                if (!p || p instanceof ImmovableSolid) continue
+
+                let result = p.step()
+                if (result) this.tempFix()
+            }
         }
-        for (let i = 1 - start; i < updateParticals.length; i += 2) {
-            let result = updateParticals[updateParticals.length - i - 1].step()
-            if (result) this.tempFix()
+        for (let y = CHUNKSIZE - 1; y >= 0; y--) {
+            for (let x = 1; x < CHUNKSIZE; x += 2) {
+                let p = this.particles[x + y * CHUNKSIZE]
+                if (!p || p instanceof ImmovableSolid) continue
+                
+                let result = p.step()
+                if (result) this.tempFix()
+            }
         }
+
 
 
     }
@@ -86,6 +95,9 @@ class Chunk {
         let y = ~~(this.y * CHUNKSIZE - player.y)
         c.putImageData(this.frameBuffer, x, y)
         c.drawText(`${this.x}, ${this.y}`, x + CHUNKSIZE / 2, y + CHUNKSIZE / 2, 14, "center")
+        
+        
+        return
         c.beginPath()
         c.strokeStyle = "lightgrey"
         c.lineWidth = 1

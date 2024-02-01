@@ -1,7 +1,9 @@
+// Base
 class Particle {
     constructor(x, y) {
         this.x = x
         this.y = y
+        this.colData = [Math.random() * 255, Math.random() * 255, Math.random() * 255]
     }
 
     move(newX, newY) {
@@ -15,74 +17,55 @@ class Particle {
         this.y = newY
     }
 
-    switch(newChunk, newX, newY) {
-        chunks[`${this.chunkX},${this.chunkY}`].particles[this.x + this.y * CHUNKSIZE] = newChunk.particles[newX + newY * CHUNKSIZE]
-        newChunk.particles[newX + newY * CHUNKSIZE] = this
+    switch(newX, newY) {
+        let newChunk = getChunk(newX, newY)
+        let oldChunk = getChunk(this.x, this.y)
+        let pOff = mod(newX, CHUNKSIZE) + mod(newY, CHUNKSIZE) * CHUNKSIZE
+
+        newChunk.particles[pOff].x = this.x
+        newChunk.particles[pOff].y = this.y
         this.x = newX
         this.y = newY
+
+        oldChunk.particles[mod(this.x, CHUNKSIZE) + mod(this.y, CHUNKSIZE) * CHUNKSIZE] = newChunk.particles[pOff]
+        newChunk.particles[pOff] = this
     }
 
 }
 
+// Solid
 class Solid extends Particle {
     constructor(x, y) {
         super(x, y)
     }
 
+    diagonalMove(dir, recur) {
+        let p = getPartical(this.x + dir, this.y + 1)
+
+        if (!p) {
+            this.move(this.x + dir, this.y + 1)
+            return true
+        } else if (p instanceof Liquid) {
+            this.switch(this.x + dir, this.y + 1)
+            return true
+        }
+
+        return recur && this.diagonalMove(-dir, false)
+    }
+
     step() {
-        
-        // Down
         let down = getPartical(this.x, this.y + 1)
         if (!down) {
             this.move(this.x, this.y + 1)
             return true
         } else if (down instanceof Liquid) {
-            //this.switch(this.x, this.y + 1)
+            this.switch(this.x, this.y + 1)
             return true
         }
-        let dir = Math.random() > 0.5 ? 1 : -1
-        let A = getPartical(this.x + dir, this.y + 1)
-        let B = getPartical(this.x - dir, this.y + 1)
 
-        if (!A) {
-            this.move(this.x + dir, this.y + 1)
-            return true
-        } else if (A instanceof Liquid) {
-            //this.switch(A.x, A.y)
-            return true
-        } else if (!B) {
-            this.move(this.x - dir, this.y + 1)
-            return true
-        } else if (B instanceof Liquid) {
-            return true
-        }
-        return false
+        return this.diagonalMove(Math.random() > 0.5 ? 1 : -1, true)
     }
 }
-
-class Liquid extends Particle {
-    constructor(x, y) {
-        super(x, y)
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-class Sand extends Solid {
-    constructor(x, y) {
-        super(x, y)
-        this.colData = [194, 178, 128]
-    }
-}
-
 
 class ImmovableSolid extends Solid {
     constructor(x, y) {
@@ -91,6 +74,67 @@ class ImmovableSolid extends Solid {
     }
 }
 
+class Sand extends Solid {
+    constructor(x, y) {
+        super(x, y)
+        this.colData = [194, 178, 128]
+    }
+}
+
+// Liquid
+class Liquid extends Particle {
+    constructor(x, y, dispertionRate) {
+        super(x, y)
+        this.dispertionRate = dispertionRate
+    }
+
+    sideMove(dir, recur) {
+        let lastX
+        for (let i = 1; i <= this.dispertionRate; i++) {
+            let newX = this.x + dir * i
+            let p = getPartical(newX, this.y)
+            if (!p) lastX = newX
+        }
+
+        if (lastX === undefined) return recur && this.sideMove(-dir, false)
+
+        this.move(lastX, this.y)
+        return true
+    }
+
+    step() {
+        let down = getPartical(this.x, this.y + 1)
+
+        if (down === undefined) {
+            this.move(this.x, this.y + 1)
+            return true
+        }
+
+        return this.sideMove(Math.random() > 0.5 ? 1 : -1, true)
+    }
+}
+
+class Water extends Liquid {
+    constructor(x, y) {
+        super(x, y, 5)
+        this.colData = [20, 20, 230]
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function getPartical(x, y) {
     let chunk = getChunk(x, y)
     if (!chunk) return new ImmovableSolid()
@@ -98,33 +142,19 @@ function getPartical(x, y) {
 }
 
 function getChunk(x, y) {
-    let cx = x < 0 ? Math.ceil(y / CHUNKSIZE) : ~~(x / CHUNKSIZE)
-    let cy = y < 0 ? Math.ceil(y / CHUNKSIZE) - 1 : ~~(y / CHUNKSIZE)
+    let cx = x / CHUNKSIZE
+    let cy = y / CHUNKSIZE
+    if (x < 0) {
+        cx = Math.floor(cx)
+    }
+    else cx = ~~cx
+    if (y < 0) cy = Math.floor(cy)
+    else cy = ~~cy
     return chunks[`${cx},${cy}`]
 }
-
-function sign(n) {
-    return n < 0 ? -1 : 1
-}
-
 function mod(n, base) {
     return ((n % base) + base) % base // Only positive
 }
 
-
-
-/*
-Positive & 0:
-let cx = ~~(x / CHUNKSIZE)
-let cy = ~~(y / CHUNKSIZE)
-let ix = x % CHUNKSIZE
-let iy = y % CHUNKSIZE
-
-Negative:
-let cx = ~~(x / CHUNKSIZE) - 1
-let cy = ~~(y / CHUNKSIZE) - 1
-let ix = x % CHUNKSIZE
-let iy = y % CHUNKSIZE
-*/
 
 setTimeout(console.clear, 500)

@@ -10,7 +10,7 @@ const CHUNKSIZE = 32
 let keys_pressed = {}
 let chunks = {}
 let mouse = { x: 0, y: 0, down: false }
-let particleType = 0
+let particleType = 1
 
 const STANDARDX = 16
 const STANDARDY = 9
@@ -42,10 +42,12 @@ async function animate() {
 }
 
 function update() {
-    for (let chunk of Object.values(chunks)) {
-        if (!chunk.updateNextFrame) continue
+    let updateChunks = Object.values(chunks).filter(chunk => chunk.updateNextFrame).sort((a, b) => b.y - a.y)
+    
+    for (let chunk of updateChunks) {
         chunk.update()
     }
+
 }
 
 function draw() {
@@ -67,7 +69,7 @@ function draw() {
     c.beginPath()
     c.lineWidth = 1
     c.strokeStyle = "black"
-    c.rect(mouse.x - 5, mouse.y - 5, 10, 10)
+    c.rect(mouse.x - MOUSESIZE / 2, mouse.y - MOUSESIZE / 2, MOUSESIZE, MOUSESIZE)
     c.stroke()
 
     
@@ -110,22 +112,31 @@ function init() {
 
 
 
+const MOUSESIZE = 3
 function spawnCluster() {
     let offX = ~~(mouse.x + player.x)
     let offY = ~~(mouse.y + player.y)
 
-
-    for (let y = offY - 5; y < offY + 5; y++) {
-        for (let x = offX - 5; x < offX + 5; x++) {
-            let chunkX = ~~(x / CHUNKSIZE) + (x < 0 ? - 1 : 0)
-            let chunkY = ~~(y / CHUNKSIZE) + (y < 0 ? - 1 : 0)
-            let chunk = chunks[`${chunkX},${chunkY}`]
+    for (let y = ~~(offY - MOUSESIZE / 2); y < offY + MOUSESIZE / 2; y++) {
+        for (let x = ~~(offX - MOUSESIZE / 2); x < offX + MOUSESIZE / 2; x++) {
+            let chunk = getChunk(x, y)
 
             if (!chunk) continue
             let partical = chunk.particles[mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE]
             if (partical) continue 
-            
-            chunk.particles[mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE] = new Sand(x , y)
+
+            switch (particleType) {
+                case 1:
+                    partical = new Sand()
+                    break
+                case 2:
+                    partical = new Water()
+                    break
+            }
+            partical.x = x
+            partical.y = y
+
+            chunk.particles[mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE] = partical
             chunk.hasUpdatedFrameBuffer = false
             chunk.updateNextFrame = true
             
@@ -135,7 +146,12 @@ function spawnCluster() {
 
 window.onmousedown = () => mouse.down = true
 window.onmouseup = () => mouse.down = false
-window.onkeydown = (e) => keys_pressed[e.key.toLowerCase()] = true
+window.onkeydown = (e) => {
+    if (e.code.search(/Digit/) !== -1) {
+        particleType = parseInt(e.key)
+    }
+    keys_pressed[e.key.toLowerCase()] = true
+}
 window.onkeyup = (e) => keys_pressed[e.key.toLowerCase()] = false
 window.onresize = fixCanvas
 window.onload = init
