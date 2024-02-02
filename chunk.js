@@ -3,7 +3,7 @@ class Chunk {
         // Positions
         this.x = x
         this.y = y
-        this.particles = Array(CHUNKSIZE * CHUNKSIZE)
+        this.elements = Array(CHUNKSIZE * CHUNKSIZE)
 
         // "Frame"
         this.frameBuffer = new ImageData(CHUNKSIZE, CHUNKSIZE)
@@ -14,10 +14,12 @@ class Chunk {
     }
     
     buildFrameBuffer() {
+        // Add particals as well
+
         for (let y = 0; y < CHUNKSIZE; y++) {
             for (let x = 0; x < CHUNKSIZE; x++) {
                 let i = (y * CHUNKSIZE + x) * 4
-                let pixel = this.particles[x + y * CHUNKSIZE]
+                let pixel = this.elements[x + y * CHUNKSIZE]
                 this.frameBuffer.data[i] = pixel?.colData[0] ?? 255
                 this.frameBuffer.data[i + 1] = pixel?.colData[1] ?? 255
                 this.frameBuffer.data[i + 2] = pixel?.colData[2] ?? 255
@@ -51,7 +53,7 @@ class Chunk {
         this.updateNextFrame = false
         for (let y = CHUNKSIZE - 1; y >= 0; y--) {
             for (let x = 0; x < CHUNKSIZE; x++) {
-                let p = this.particles[x + y * CHUNKSIZE]
+                let p = this.elements[x + y * CHUNKSIZE]
                 if (!p || p instanceof ImmovableSolid) continue
 
                 let result = p.step()

@@ -17,6 +17,7 @@ let particleType = 2
 const player = new Player()
 const keys_pressed = {}
 const chunks = {}
+const particles = []
 const CHUNKSIZE = 32
 const GRIDWITDH = 5
 const GRIDHEIGHT = 5
@@ -81,7 +82,7 @@ function init() {
                     let value = getPerlinNoise(chunk.x * CHUNKSIZE + x, chunk.y * CHUNKSIZE + y, 100, 40)
                     //let value = advancedPerlinNoise((chunk.x * CHUNKSIZE + x),
                     //(chunk.y * CHUNKSIZE + y), 100, 1, 40, 1)
-                    if (value > 0.5) chunk.particles[x + y * CHUNKSIZE] = new ImmovableSolid(x + j * CHUNKSIZE, y + i * CHUNKSIZE)
+                    if (value > 0.5) chunk.elements[x + y * CHUNKSIZE] = new ImmovableSolid(x + j * CHUNKSIZE, y + i * CHUNKSIZE)
                 }
             }
         }

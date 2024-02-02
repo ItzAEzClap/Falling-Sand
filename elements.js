@@ -1,5 +1,5 @@
 // Base
-class Particle {
+class Element {
     constructor(x, y) {
         this.x = x
         this.y = y
@@ -11,8 +11,8 @@ class Particle {
         let oldChunk = getChunk(this.x, this.y)
         if (newChunk !== oldChunk) newChunk.hasUpdatedFrameBuffer = false
 
-        newChunk.particles[mod(newX, CHUNKSIZE) + mod(newY, CHUNKSIZE) * CHUNKSIZE] = this
-        oldChunk.particles[mod(this.x, CHUNKSIZE) + mod(this.y, CHUNKSIZE) * CHUNKSIZE] = undefined
+        newChunk.elements[getElementPos(newX, newY)] = this
+        oldChunk.elements[getElementPos(this.x, this.y)] = undefined
         this.x = newX
         this.y = newY
     }
@@ -20,21 +20,25 @@ class Particle {
     switch(newX, newY) {
         let newChunk = getChunk(newX, newY)
         let oldChunk = getChunk(this.x, this.y)
-        let pOff = mod(newX, CHUNKSIZE) + mod(newY, CHUNKSIZE) * CHUNKSIZE
-        let thisOff = mod(this.x, CHUNKSIZE) + mod(this.y, CHUNKSIZE) * CHUNKSIZE
+        let pOff = getElementPos(newX, newY)
+        let thisOff = getElementPos(this.x, this.y)
 
-        newChunk.particles[pOff].x = this.x
-        newChunk.particles[pOff].y = this.y
+        newChunk.elements[pOff].x = this.x
+        newChunk.elements[pOff].y = this.y
         this.x = newX
         this.y = newY
-        oldChunk.particles[thisOff] = newChunk.particles[pOff]
-        newChunk.particles[pOff] = this
+        oldChunk.elements[thisOff] = newChunk.elements[pOff]
+        newChunk.elements[pOff] = this
     }
 
+    convertToParticle(vel) {
+        particles.push(new Particle(this, vel))
+        getChunk(this.x, this.y).elements[getElementPos(this.x, this.y)] = undefined
+    }
 }
 
 // Solid
-class Solid extends Particle {
+class Solid extends Element {
     constructor(x, y) {
         super(x, y)
     }
@@ -82,17 +86,18 @@ class Sand extends Solid {
 }
 
 // Liquid
-class Liquid extends Particle {
+// When it cant move down chance to become particle with positive y velocity
+class Liquid extends Element {
     constructor(x, y, dispertionRate) {
         super(x, y)
         this.dispertionRate = dispertionRate
     }
-
     sideMove(dir, recur) {
         let lastX
-        for (let i = 1; i <= this.dispertionRate; i++) {
+        let maxMove = ~~(Math.random() * this.dispertionRate + 1)
+        for (let i = 1; i <= maxMove; i++) {
             let newX = this.x + dir * i
-            let p = getPartical(newX, this.y)
+            let p = getElementAtCell(newX, this.y)
             if (!p) lastX = newX
         }
 
@@ -103,9 +108,9 @@ class Liquid extends Particle {
     }
 
     step() {
-        let down = getPartical(this.x, this.y + 1)
+        let down = getElementAtCell(this.x, this.y + 1)
 
-        if (down === undefined) {
+        if (!down) {
             this.move(this.x, this.y + 1)
             return true
         }
@@ -122,7 +127,7 @@ class Water extends Liquid {
 }
 
 // Gas
-class Gas extends Particle {
+class Gas extends Element {
     constructor(x, y) {
         super(x, y)
     }
@@ -142,10 +147,10 @@ class Gas extends Particle {
 
 
 // Functions
-function getPartical(x, y) {
+function getElementAtCell(x, y) {
     let chunk = getChunk(x, y)
     if (!chunk) return new ImmovableSolid()
-    return chunk.particles[mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE]
+    return chunk.elements[getElementPos(x, y)]
 }
 
 function getChunk(x, y) {
@@ -158,6 +163,10 @@ function getChunk(x, y) {
     if (y < 0) cy = Math.floor(cy)
     else cy = ~~cy
     return chunks[`${cx},${cy}`]
+}
+
+function getElementPos(x, y) {
+    return mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE
 }
 
 function mod(n, base) {
@@ -173,7 +182,8 @@ function spawnCluster() {
             let chunk = getChunk(x, y)
 
             if (!chunk) continue
-            let partical = chunk.particles[mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE]
+            let pos = getElementPos(x, y)
+            let partical = chunk.elements[pos]
             if (partical) continue 
 
             switch (particleType) {
@@ -187,10 +197,9 @@ function spawnCluster() {
             partical.x = x
             partical.y = y
 
-            chunk.particles[mod(x, CHUNKSIZE) + mod(y, CHUNKSIZE) * CHUNKSIZE] = partical
+            chunk.elements[pos] = partical
             chunk.hasUpdatedFrameBuffer = false
             chunk.updateNextFrame = true
-            
         }
     }    
 }
