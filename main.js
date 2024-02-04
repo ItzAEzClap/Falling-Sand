@@ -38,10 +38,12 @@ function update() {
     player.move()
     if (mouse.down) spawnCluster()
 
-    let updateChunks = Object.values(chunks).filter(chunk => chunk.updateThisFrame).sort((a, b) => b.y - a.y)
-    for (let chunk of updateChunks) chunk.update()
+    let updateChunks = Object.values(chunks).sort((a, b) => b.y - a.y)
+    updateChunks.forEach(chunk => chunk.update())
+    for (let chunk of updateChunks) {
+        chunk.shift()
+    }
     for (let chunk of Object.values(chunks)) {
-        chunk.hasUpdatedThisFrame = false
         chunk.elements.forEach(element => { if (element) element.hasUpdated = false })
     }
 }
@@ -83,6 +85,10 @@ function init() {
             
             for (let y = 0; y < CHUNKSIZE; y++) {
                 for (let x = 0; x < CHUNKSIZE; x++) {
+                    if (j < 3 || j >= GRIDHEIGHT - 1 || i < 1 || i >= GRIDWITDH) continue
+                    chunk.elements[x + y * CHUNKSIZE] = new ImmovableSolid(x + j * CHUNKSIZE, y + i * CHUNKSIZE)
+                    
+                    continue
                     let value = getPerlinNoise(chunk.x * CHUNKSIZE + x, chunk.y * CHUNKSIZE + y, 100, 40)
                     //let value = advancedPerlinNoise((chunk.x * CHUNKSIZE + x),
                     //(chunk.y * CHUNKSIZE + y), 100, 1, 40, 1)

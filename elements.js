@@ -10,8 +10,6 @@ class Element {
     move(newX, newY) {
         let newChunk = getChunk(newX, newY)
         let oldChunk = getChunk(this.x, this.y)
-        if (newChunk !== oldChunk) newChunk.hasUpdatedFrameBuffer = false
-
         newChunk.elements[getElementPos(newX, newY)] = this
         oldChunk.elements[getElementPos(this.x, this.y)] = undefined
         this.x = newX
@@ -108,7 +106,7 @@ class Liquid extends Element {
     
     sideMove(dir, recur) {
         let lastX
-        let maxMove = ~~(Math.random() * this.dispertionRate + 1)
+        let maxMove = ~~(this.dispertionRate / 2 + Math.random() * this.dispertionRate / 2)
         for (let i = 1; i <= maxMove; i++) {
             let newX = this.x + dir * i
             let p = getElementAtCell(newX, this.y)
@@ -116,7 +114,10 @@ class Liquid extends Element {
             lastX = newX
         }
 
-        if (lastX === undefined) return recur && this.sideMove(-dir, false)
+        if (lastX === undefined) {
+            if (recur) return this.sideMove(-dir, false)
+            return false
+        }
 
         this.move(lastX, this.y)
         return true
@@ -132,7 +133,7 @@ class Liquid extends Element {
             return true
         }
 
-        return this.diagonalMove(Math.random() > 0.5 ? 1 : -1, true) || this.sideMove(Math.random() > 0.5 ? 1 : -1, true)
+        return this.sideMove(Math.random() > 0.5 ? 1 : -1, true)
     }
 }
 
@@ -208,11 +209,17 @@ function spawnCluster() {
             if (partical) continue 
 
             switch (particleType) {
+                case 0:
+                    partical = new ImmovableSolid()
+                    break
                 case 1:
                     partical = new Sand()
                     break
                 case 2:
                     partical = new Water()
+                    break
+                default:
+                    return
                     break
             }
             partical.x = x

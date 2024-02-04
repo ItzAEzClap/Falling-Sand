@@ -12,7 +12,7 @@ class Chunk {
         // Update
         this.updateThisFrame = true
         this.updateNextFrame = false
-        this.hasUpdatedThisFrame = false
+        this.hasUpdatedThisFrame = true
         this.dir = 1
     }
     
@@ -32,44 +32,49 @@ class Chunk {
         this.hasUpdatedFrameBuffer = true
     }
 
-    tempFix() {
+    shift() {
+        if (this.hasUpdatedThisFrame) {
+            this.updateThisFrame = this.updateNextFrame
+            this.updateNextFrame = false
+        }
+    }
+
+    updateAdjacentChunks() {
         let right = chunks[`${this.x + 1},${this.y}`]
-        if (right) right.updateThisFrame = true
+        if (right) right.updateNextFrame = true
 
         let left = chunks[`${this.x - 1},${this.y}`]
-        if (left) left.updateThisFrame = true
+        if (left) left.updateNextFrame = true
 
         let down = chunks[`${this.x},${this.y + 1}`]
-        if (down) down.updateThisFrame = true
+        if (down) down.updateNextFrame = true
 
         let up = chunks[`${this.x},${this.y - 1}`]
-        if (up) up.updateThisFrame = true
+        if (up) up.updateNextFrame = true
     }
 
 
     update() {
-        if (this.hasUpdatedThisFrame || !this.updateThisFrame) return
-
         this.hasUpdatedThisFrame = true
-        this.updateThisFrame = this.updateNextFrame
-        this.updateNextFrame = false
+        if (!this.updateThisFrame) return
         
+        let oldDir = this.dir
         for (let y = CHUNKSIZE - 1; y >= 0; y--) {
             for (let x = 0; x < CHUNKSIZE; x++) {
                 let p = this.elements[y * CHUNKSIZE + (this.dir === 1 ? x : CHUNKSIZE - 1 - x)]
                 if (!p || p instanceof ImmovableSolid) continue
-
+                
                 let result = p.step()
                 if (!result) continue
 
                 this.hasUpdatedFrameBuffer = false
                 this.updateNextFrame = true
-                this.tempFix()
-
+                this.updateAdjacentChunks()
             }
+            this.dir *= -1
         }
 
-        this.dir *= -1
+        this.dir = -oldDir
     }
 
     draw() {
