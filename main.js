@@ -38,8 +38,12 @@ function update() {
     player.move()
     if (mouse.down) spawnCluster()
 
-    let updateChunks = Object.values(chunks).filter(chunk => chunk.updateNextFrame).sort((a, b) => b.y - a.y)
+    let updateChunks = Object.values(chunks).filter(chunk => chunk.updateThisFrame).sort((a, b) => b.y - a.y)
     for (let chunk of updateChunks) chunk.update()
+    for (let chunk of Object.values(chunks)) {
+        chunk.hasUpdatedThisFrame = false
+        chunk.elements.forEach(element => { if (element) element.hasUpdated = false })
+    }
 }
 
 function draw() {

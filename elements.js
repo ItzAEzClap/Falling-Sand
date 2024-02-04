@@ -4,6 +4,7 @@ class Element {
         this.x = x
         this.y = y
         this.colData = [Math.random() * 255, Math.random() * 255, Math.random() * 255]
+        this.hasUpdated = false
     }
 
     move(newX, newY) {
@@ -33,7 +34,7 @@ class Element {
 
     convertToParticle(vel) {
         particles.push(new Particle(this, vel))
-        getChunk(this.x, this.y).elements[getElementPos(this.x, this.y)] = undefined
+        setCell(this.x, this.y, undefined)
     }
 }
 
@@ -44,7 +45,7 @@ class Solid extends Element {
     }
 
     diagonalMove(dir, recur) {
-        let p = getPartical(this.x + dir, this.y + 1)
+        let p = getElementAtCell(this.x + dir, this.y + 1)
 
         if (!p) {
             this.move(this.x + dir, this.y + 1)
@@ -58,7 +59,7 @@ class Solid extends Element {
     }
 
     step() {
-        let down = getPartical(this.x, this.y + 1)
+        let down = getElementAtCell(this.x, this.y + 1)
         if (!down) {
             this.move(this.x, this.y + 1)
             return true
@@ -92,13 +93,27 @@ class Liquid extends Element {
         super(x, y)
         this.dispertionRate = dispertionRate
     }
+
+    diagonalMove(dir, recur) {
+        let p = getElementAtCell(this.x + dir, this.y + 1)
+
+        if (!p) {
+            this.move(this.x + dir, this.y + 1)
+            return true
+        }
+
+        return recur && this.diagonalMove(-dir, false)
+    }
+
+    
     sideMove(dir, recur) {
         let lastX
         let maxMove = ~~(Math.random() * this.dispertionRate + 1)
         for (let i = 1; i <= maxMove; i++) {
             let newX = this.x + dir * i
             let p = getElementAtCell(newX, this.y)
-            if (!p) lastX = newX
+            if (p) break
+            lastX = newX
         }
 
         if (lastX === undefined) return recur && this.sideMove(-dir, false)
@@ -108,20 +123,22 @@ class Liquid extends Element {
     }
 
     step() {
+        if (this.hasUpdated) return false
+        this.hasUpdated = true
+        
         let down = getElementAtCell(this.x, this.y + 1)
-
         if (!down) {
             this.move(this.x, this.y + 1)
             return true
         }
 
-        return this.sideMove(Math.random() > 0.5 ? 1 : -1, true)
+        return this.diagonalMove(Math.random() > 0.5 ? 1 : -1, true) || this.sideMove(Math.random() > 0.5 ? 1 : -1, true)
     }
 }
 
 class Water extends Liquid {
     constructor(x, y) {
-        super(x, y, 5)
+        super(x, y, 10)
         this.colData = [20, 20, 230]
     }
 }
@@ -147,6 +164,10 @@ class Gas extends Element {
 
 
 // Functions
+function setCell(x, y, element) {
+    getChunk(x, y).elements[getElementPos(x, y)] = element
+}
+
 function getElementAtCell(x, y) {
     let chunk = getChunk(x, y)
     if (!chunk) return new ImmovableSolid()
@@ -199,7 +220,7 @@ function spawnCluster() {
 
             chunk.elements[pos] = partical
             chunk.hasUpdatedFrameBuffer = false
-            chunk.updateNextFrame = true
+            chunk.updateThisFrame = true
         }
     }    
 }

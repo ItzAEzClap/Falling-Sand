@@ -10,7 +10,10 @@ class Chunk {
         this.hasUpdatedFrameBuffer = false
 
         // Update
-        this.updateNextFrame = true
+        this.updateThisFrame = true
+        this.updateNextFrame = false
+        this.hasUpdatedThisFrame = false
+        this.dir = 1
     }
     
     buildFrameBuffer() {
@@ -30,30 +33,30 @@ class Chunk {
     }
 
     tempFix() {
-        this.hasUpdatedFrameBuffer = false
-        this.updateNextFrame = true
-
         let right = chunks[`${this.x + 1},${this.y}`]
-        if (right) right.updateNextFrame = true
+        if (right) right.updateThisFrame = true
 
         let left = chunks[`${this.x - 1},${this.y}`]
-        if (left) left.updateNextFrame = true
+        if (left) left.updateThisFrame = true
 
         let down = chunks[`${this.x},${this.y + 1}`]
-        if (down) down.updateNextFrame = true
+        if (down) down.updateThisFrame = true
 
         let up = chunks[`${this.x},${this.y - 1}`]
-        if (up) up.updateNextFrame = true
+        if (up) up.updateThisFrame = true
     }
 
 
     update() {
-        if (!this.updateNextFrame) return
+        if (this.hasUpdatedThisFrame || !this.updateThisFrame) return
 
+        this.hasUpdatedThisFrame = true
+        this.updateThisFrame = this.updateNextFrame
         this.updateNextFrame = false
+        
         for (let y = CHUNKSIZE - 1; y >= 0; y--) {
             for (let x = 0; x < CHUNKSIZE; x++) {
-                let p = this.elements[x + y * CHUNKSIZE]
+                let p = this.elements[y * CHUNKSIZE + (this.dir === 1 ? x : CHUNKSIZE - 1 - x)]
                 if (!p || p instanceof ImmovableSolid) continue
 
                 let result = p.step()
@@ -62,8 +65,11 @@ class Chunk {
                 this.hasUpdatedFrameBuffer = false
                 this.updateNextFrame = true
                 this.tempFix()
+
             }
         }
+
+        this.dir *= -1
     }
 
     draw() {

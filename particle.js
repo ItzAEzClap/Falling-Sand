@@ -20,7 +20,13 @@ class Particle {
 
 
     convertToElement() {
+        particles.splice(particles.indexOf(this))
 
+        this.element.x = this.x
+        this.element.y = this.y
+        this.element.colData = this.colData
+
+        getChunk(this.x, this.y).elements[getElementPos(this.x, this.y)] = this.element
     }
 }
 
