@@ -49,8 +49,10 @@ class MovableSolid extends Solid {
     }
 
     moveDownSide() {
-        let emptyLeft = !getElementAtCell(this.x - 1, this.y + 1)
-        let emptyRight = !getElementAtCell(this.x + 1, this.y + 1)
+        let left = getElementAtCell(this.x - 1, this.y + 1)
+        let right = getElementAtCell(this.x + 1, this.y + 1)
+        let emptyLeft = !left || left instanceof Liquid
+        let emptyRight = !right || right instanceof Liquid
 
         if (emptyLeft && emptyRight) {
             emptyLeft = Math.random() < 0.5
@@ -114,7 +116,6 @@ class Liquid extends Element {
         let maxMovement = ~~(1 + Math.random() * this.dispertionRate)
 
         for (let x = 1; x <= maxMovement; x++) {
-
             if (!blockedA && !getElementAtCell(this.x + x * dir, this.y)) {
                 maxA++
             } else blockedA = 2
