@@ -1,5 +1,4 @@
 const canvas = document.createElement("canvas")
-const canvas = document.createElement("canvas")
 const c = canvas.getContext("2d")
 const renderCanvas = document.createElement("canvas")
 const renderC = renderCanvas.getContext("2d")
@@ -35,7 +34,6 @@ function animate() {
     requestAnimationFrame(animate)
 }
 
-let dir = 1
 function update() {
     player.move()
     if (mouse.down) spawnCluster()
@@ -55,18 +53,6 @@ function draw() {
     renderC.imageSmoothingEnabled = false
     renderC.clearRect(0, 0, renderCanvas.width, renderCanvas.height)
     c.clearRect(0, 0, canvas.width, canvas.height)
-    renderC.imageSmoothingEnabled = false
-    renderC.clearRect(0, 0, renderCanvas.width, renderCanvas.height)
-    c.clearRect(0, 0, canvas.width, canvas.height)
-
-    let offX = ~~(player.x / CHUNKSIZE)
-    let offY = ~~(player.y / CHUNKSIZE)
-    for (let y = -1; y < STANDARDY * RENDERSCALE / CHUNKSIZE + 1; y++) {
-        for (let x = -1; x < STANDARDX * RENDERSCALE / CHUNKSIZE + 1; x++) {
-            let chunk = chunks[`${x + offX},${y + offY}`]
-            if (chunk) chunk.draw()
-        }
-    }
     
     c.beginPath()
     let offX = ~~(player.x / CHUNKSIZE)

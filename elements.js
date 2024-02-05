@@ -53,7 +53,7 @@ class MovableSolid extends Solid {
         let emptyRight = !getElementAtCell(this.x + 1, this.y + 1)
 
         if (emptyLeft && emptyRight) {
-            emptyLeft = Math.random() > 0.5
+            emptyLeft = Math.random() < 0.5
             emptyRight = !emptyLeft
         }        
         
@@ -111,8 +111,9 @@ class Liquid extends Element {
         let maxB = 0
         let blockedA = false
         let blockedB = false
+        let maxMovement = ~~(1 + Math.random() * this.dispertionRate)
 
-        for (let x = 1; x <= this.dispertionRate; x++) {
+        for (let x = 1; x <= maxMovement; x++) {
 
             if (!blockedA && !getElementAtCell(this.x + x * dir, this.y)) {
                 maxA++
@@ -131,7 +132,7 @@ class Liquid extends Element {
 
 class Water extends Liquid {
     constructor(x, y) {
-        super(x, y, 5)
+        super(x, y, 10)
         this.colData = [20, 20, 230]
     }
 
@@ -193,12 +194,10 @@ function getElementAtCell(x, y) {
 }
 
 function getChunk(x, y) {
-    let cx = x / CHUNKSIZE
-    let cy = y / CHUNKSIZE
-    if (x < 0) Math.floor(cx)
-    else cx = ~~cx
-    if (y < 0) Math.floor(cy)
-    else cy = ~~cy
+    let cx = ~~(x / CHUNKSIZE)
+    let cy = ~~(y / CHUNKSIZE)
+    if (x < 0 && x % CHUNKSIZE !== 0) cx--
+    if (y < 0 && y % CHUNKSIZE !== 0) cy--
     return chunks[`${cx},${cy}`]
 }
 
