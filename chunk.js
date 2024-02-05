@@ -70,5 +70,12 @@ class Chunk {
         let y = ~~(this.y * CHUNKSIZE - player.y)
         c.putImageData(this.frameBuffer, x, y)
         c.drawText(`${this.x}, ${this.y}`, x + CHUNKSIZE / 2, y + CHUNKSIZE / 2, 14, "center")
+
+        if (this.updateThisFrame) {
+            c.beginPath()
+            c.strokeStyle = "lightgrey"
+            c.strokeRect(x, y, CHUNKSIZE, CHUNKSIZE)
+            c.stroke()
+        }
     }
 }

@@ -17,6 +17,41 @@ class Element {
         oldChunk.elements[getElementPos(this.x, this.y)] = p
         newChunk.elements[newPos] = this
 
+        /*
+        // Update adjacent
+        if (this.x === 0) {
+            let chunk = chunks[`${this.x - 1},${this.y}`]
+            if (chunk) chunk.updateNextFrame = true
+        } else if (this.x === CHUNKSIZE - 1) {
+            let chunk = chunks[`${this.x + 1},${this.y}`]
+            if (chunk) chunk.updateNextFrame = true
+        }
+
+        if (this.y === 0) {
+            let chunk = chunks[`${this.x},${this.y - 1}`]
+            if (chunk) chunk.updateNextFrame = true
+        } else if (this.y === CHUNKSIZE - 1) {
+            let chunk = chunks[`${this.x},${this.y + 1}`]
+            if (chunk) chunk.updateNextFrame = true
+        }
+
+        if (newX === 0) {
+            let chunk = chunks[`${newX - 1},${newY}`]
+            if (chunk) chunk.updateNextFrame = true
+        } else if (newX === CHUNKSIZE - 1) {
+            let chunk = chunks[`${newX + 1},${newY}`]
+            if (chunk) chunk.updateNextFrame = true
+        }
+        
+        if (newY === 0) {
+            let chunk = chunks[`${newX},${newY - 1}`]
+            if (chunk) chunk.updateNextFrame = true
+        } else if (newY === CHUNKSIZE - 1) {
+            let chunk = chunks[`${newX},${newY + 1}`]
+            if (chunk) chunk.updateNextFrame = true
+        }*/
+
+
         if (p) {
             p.x = this.x
             p.y = this.y
@@ -24,10 +59,12 @@ class Element {
 
         this.x = newX
         this.y = newY
+
         oldChunk.updateNextFrame = true
         newChunk.updateNextFrame = true
         oldChunk.updateAdjacentChunks()
         newChunk.updateAdjacentChunks()
+
     }
 }
 

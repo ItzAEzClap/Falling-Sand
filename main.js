@@ -10,7 +10,7 @@ const STANDARDY = 9
 const RENDERSCALE = 15
 
 const FPS = 60
-const MOUSESIZE = 10
+const MOUSESIZE = 5
 const mouse = { x: 0, y: 0, down: false }
 
 let particleType = 1
