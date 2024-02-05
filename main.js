@@ -1,119 +1,113 @@
-// General
-const FPS = 60
-let updateInterval = (1 / FPS) * 1000
-let lastFrame = performance.now()
-let timeAccumulated = 0
-
-// Game
-const canvas = document.querySelector("canvas")
+const canvas = document.createElement("canvas")
 const c = canvas.getContext("2d")
-const tileWidth = 20
-const chunkSize = 16
-let rows, cols
-let chunks = []
-let positions = {}
+const renderCanvas = document.createElement("canvas")
+const renderC = renderCanvas.getContext("2d")
+document.body.appendChild(renderCanvas)
+renderCanvas.style.zIndex = "0"
 
+const STANDARDX = 16
+const STANDARDY = 9
+const RENDERSCALE = 15
 
-async function initLoop() {
-    lastFrame = performance.now()
-    timeAccumulated = 0
-    chunks = []
-    positions = {}
+const FPS = 60
+const MOUSESIZE = 10
+const mouse = { x: 0, y: 0, down: false }
 
-    // Canvas
-    rows = ~~(window.innerHeight / tileWidth)
-    cols = ~~(window.innerWidth / tileWidth)
-    canvas.width = tileWidth * cols
-    canvas.height = tileWidth * rows
+let particleType = 1
+const player = new Player()
+const keys_pressed = {}
+const chunks = {}
+const particles = []
+const CHUNKSIZE = 32
+const GRIDWITDH = 5
+const GRIDHEIGHT = 5
 
-    // Chunks
-    for (let y = 0; y < rows / chunkSize; y++) {
-        for (let x = 0; x < cols / chunkSize; x++) {
-            chunks.push(new Chunk(x * chunkSize, y * chunkSize, chunkSize))
-        }
-    }
-    console.log(chunks)
-    gameLoop()
-}
+let prevTime = 0
+let currentFPS = 144
+function animate() {
+    let dt = performance.now() - prevTime
+    prevTime += dt
+    currentFPS = 1000 / dt
 
-async function gameLoop() {
-    requestAnimationFrame(gameLoop)
-
-    let dt = performance.now() - lastFrame
-    lastFrame += dt
-    timeAccumulated += dt
-
-    while (timeAccumulated > updateInterval) { // Enough lost time to update another frame
-        update()
-        timeAccumulated -= updateInterval
-    }
-
-    draw(timeAccumulated / updateInterval)
+    update()
+    draw()
+    requestAnimationFrame(animate)
 }
 
 function update() {
-    // Update bottom first
-    let amount = 0
-    chunks.sort((a, b) => b.y - a.y).forEach(chunk => {
-        if (chunk.updating) {
-            amount++
-            chunk.update()
-        }
+    player.move()
+    if (mouse.down) spawnCluster()
+
+    let updateChunks = Object.values(chunks).filter(e => e.updateThisFrame)
+        .sort((a, b) => Math.sqrt((player.x - a.x * CHUNKSIZE) ** 2 + (player.y - a.y * CHUNKSIZE) ** 2) 
+                        - Math.sqrt((player.x - b.x * CHUNKSIZE) ** 2 + (player.y - b.y * CHUNKSIZE) ** 2))
+    for (let i = 0; i < updateChunks.length; i += 2) updateChunks[i].update()
+    for (let i = 1; i < updateChunks.length; i += 2) updateChunks[i].update()
+    Object.values(chunks).forEach(chunk => {
+        chunk.shiftUpdateSchedule()
+        chunk.elements.forEach(element => { if (element) element.hasUpdated = false })
     })
-    console.log(`Amount of chunks updating: ${amount}`)
 }
 
 function draw() {
-    c.fillStyle = "black"
-    c.fillRect(0, 0, canvas.width, canvas.height)
+    renderC.imageSmoothingEnabled = false
+    renderC.clearRect(0, 0, renderCanvas.width, renderCanvas.height)
+    c.clearRect(0, 0, canvas.width, canvas.height)
 
-    c.strokeStyle = "white"
-    c.lineWidth = 1
-
-    for (let i = 0; i < rows; i++) {
-        c.moveTo(0, i * tileWidth)
-        c.lineTo(canvas.width, i * tileWidth)
-        c.stroke()   
-    }
-    for (let i = 0; i < cols; i++) {
-        c.moveTo(i * tileWidth, 0)
-        c.lineTo(i * tileWidth, canvas.height)
-        c.stroke()
-    }
-    
-    chunks.forEach(chunk => chunk.draw())
-}
-
-initLoop()
-window.onmousedown = (e) => { spawnCluster(~~(e.clientX / tileWidth), ~~(e.clientY / tileWidth), 10, "Sand") }
-
-function addParticle(x, y, type) {
-    console.log(x, y)
-    let particle
-    let chunk
-    for (const c of chunks) {
-        if (c.x > x || c.x + c.size < x || c.y > y || c.y + c.size < y) continue
-        chunk = c
-        break
-    }
-
-    if (type === "Sand") {
-        particle = new Sand(x, y)
-    }
-
-    positions[[x, y]] = particle
-    chunk.particles.push(particle)
-}
-
-function spawnCluster(x, y, r, type) {
-    for (let i = y - r; i < y + r; i++) {
-        if (i < 0) continue
-        if (i >= rows) break
-        for (let j = x - r; j < x + r; j++) {
-            if (j < 0) continue
-            if (j >= cols) break
-            if (positions[[j, i]] || Math.sqrt((x - j) ** 2 + (y - i) ** 2) > r) continue
-            if (Math.random() > 0.2) addParticle(j, i, type) 
+    let offX = ~~(player.x / CHUNKSIZE)
+    let offY = ~~(player.y / CHUNKSIZE)
+    for (let y = -1; y < STANDARDY * RENDERSCALE / CHUNKSIZE + 1; y++) {
+        for (let x = -1; x < STANDARDX * RENDERSCALE / CHUNKSIZE + 1; x++) {
+            let chunk = chunks[`${x + offX},${y + offY}`]
+            if (chunk) chunk.draw()
         }
     }
+    
+    c.beginPath()
+    c.lineWidth = 1
+    c.strokeStyle = "black"
+    c.rect(mouse.x - MOUSESIZE / 2, mouse.y - MOUSESIZE / 2, MOUSESIZE, MOUSESIZE)
+    c.stroke()
+    
+    // Draw upscale
+    renderC.drawImage(canvas, 0, 0, renderCanvas.width, renderCanvas.height)
+    renderC.drawText(`${~~currentFPS}`, 50, 50, "60px Arial")
 }
+
+function init() {
+    canvas.width = STANDARDX * RENDERSCALE
+    canvas.height = STANDARDY * RENDERSCALE
+    fixCanvas()
+
+    for (let i = -GRIDHEIGHT; i <= GRIDHEIGHT; i++) {
+        for (let j = -GRIDWITDH; j <= GRIDWITDH; j++) {
+            let chunk = new Chunk(i, j)
+            chunks[`${i},${j}`] = chunk
+
+            for (let y = 0; y < CHUNKSIZE; y++) {
+                for (let x = 0; x < CHUNKSIZE; x++) {
+                    if (j < 3 || j >= GRIDHEIGHT - 1 || i < 1 || i >= GRIDWITDH) continue
+                    chunk.elements[x + y * CHUNKSIZE] = new Stone(x + j * CHUNKSIZE, y + i * CHUNKSIZE)
+                }
+            }
+        }
+    }
+    
+    prevTime = performance.now() - 1000 / 144
+    window.onmousemove = (e) => { mouse.x = e.clientX / scale; mouse.y = e.clientY / scale }
+    animate()
+}
+
+
+
+window.onkeydown = (e) => {
+    if (e.code.search(/Digit/) !== -1) {
+        particleType = parseInt(e.key)
+    }
+    keys_pressed[e.key.toLowerCase()] = true
+}
+window.onkeyup = (e) => keys_pressed[e.key.toLowerCase()] = false
+window.onresize = fixCanvas
+window.onload = init
+window.onmousedown = () => mouse.down = true
+window.onmouseup = () => mouse.down = false
