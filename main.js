@@ -34,11 +34,12 @@ async function animate() {
     currentFPS = 1000 / dt
 }
 
+let dir = 1
 function update() {
     player.move()
     if (mouse.down) spawnCluster()
 
-    let updateChunks = Object.values(chunks).sort((a, b) => b.y - a.y)
+    let updateChunks = Object.values(chunks).sort((a, b) => b.y - a.y + (b.x - a.x) * dir)
     updateChunks.forEach(chunk => chunk.update())
     for (let chunk of updateChunks) {
         chunk.shift()
@@ -46,6 +47,7 @@ function update() {
     for (let chunk of Object.values(chunks)) {
         chunk.elements.forEach(element => { if (element) element.hasUpdated = false })
     }
+    dir *= -1
 }
 
 function draw() {

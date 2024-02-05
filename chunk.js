@@ -12,7 +12,6 @@ class Chunk {
         // Update
         this.updateThisFrame = true
         this.updateNextFrame = false
-        this.hasUpdatedThisFrame = true
         this.dir = 1
     }
     
@@ -33,10 +32,9 @@ class Chunk {
     }
 
     shift() {
-        if (this.hasUpdatedThisFrame) {
-            this.updateThisFrame = this.updateNextFrame
-            this.updateNextFrame = false
-        }
+        this.updateThisFrame = this.updateNextFrame
+        this.updateNextFrame = false
+        this.elements.forEach(element => { if (element) element.hasUpdated = false })
     }
 
     updateAdjacentChunks() {
@@ -55,15 +53,15 @@ class Chunk {
 
 
     update() {
-        this.hasUpdatedThisFrame = true
         if (!this.updateThisFrame) return
         
         let oldDir = this.dir
         for (let y = CHUNKSIZE - 1; y >= 0; y--) {
             for (let x = 0; x < CHUNKSIZE; x++) {
                 let p = this.elements[y * CHUNKSIZE + (this.dir === 1 ? x : CHUNKSIZE - 1 - x)]
-                if (!p || p instanceof ImmovableSolid) continue
-                
+                if (!p || p instanceof ImmovableSolid || p.hasUpdated) continue
+
+                p.hasUpdated = true
                 let result = p.step()
                 if (!result) continue
 

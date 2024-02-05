@@ -106,7 +106,7 @@ class Liquid extends Element {
     
     sideMove(dir, recur) {
         let lastX
-        let maxMove = ~~(this.dispertionRate / 2 + Math.random() * this.dispertionRate / 2)
+        let maxMove = ~~(1 + this.dispertionRate / 2 + Math.random() * this.dispertionRate / 2)
         for (let i = 1; i <= maxMove; i++) {
             let newX = this.x + dir * i
             let p = getElementAtCell(newX, this.y)
@@ -124,9 +124,6 @@ class Liquid extends Element {
     }
 
     step() {
-        if (this.hasUpdated) return false
-        this.hasUpdated = true
-        
         let down = getElementAtCell(this.x, this.y + 1)
         if (!down) {
             this.move(this.x, this.y + 1)
@@ -139,7 +136,7 @@ class Liquid extends Element {
 
 class Water extends Liquid {
     constructor(x, y) {
-        super(x, y, 10)
+        super(x, y, 5)
         this.colData = [20, 20, 230]
     }
 }
