@@ -11,46 +11,51 @@ class Element {
     moveTo(newX, newY) {
         let newChunk = getChunk(newX, newY)
         let oldChunk = getChunk(this.x, this.y)
-        let newPos = getElementPos(newX, newY)
+
+        let oldRelX = mod(this.x, CHUNKSIZE)
+        let oldRelY = mod(this.y, CHUNKSIZE)
+        let newRelX = mod(newX, CHUNKSIZE)
+        let newRelY = mod(newY, CHUNKSIZE)
+
+        let newPos = newRelX + newRelY * CHUNKSIZE
         let p = newChunk.elements[newPos]
 
-        oldChunk.elements[getElementPos(this.x, this.y)] = p
+        oldChunk.elements[oldRelX + oldRelY * CHUNKSIZE] = p
         newChunk.elements[newPos] = this
 
-        /*
+        
         // Update adjacent
-        if (this.x === 0) {
-            let chunk = chunks[`${this.x - 1},${this.y}`]
+        if (oldRelX === 0) {
+            let chunk = chunks[`${oldChunk.x - 1},${oldChunk.y}`]
             if (chunk) chunk.updateNextFrame = true
-        } else if (this.x === CHUNKSIZE - 1) {
-            let chunk = chunks[`${this.x + 1},${this.y}`]
-            if (chunk) chunk.updateNextFrame = true
-        }
-
-        if (this.y === 0) {
-            let chunk = chunks[`${this.x},${this.y - 1}`]
-            if (chunk) chunk.updateNextFrame = true
-        } else if (this.y === CHUNKSIZE - 1) {
-            let chunk = chunks[`${this.x},${this.y + 1}`]
+        } else if (oldRelX === CHUNKSIZE - 1) {
+            let chunk = chunks[`${oldChunk.x + 1},${oldChunk.y}`]
             if (chunk) chunk.updateNextFrame = true
         }
 
-        if (newX === 0) {
-            let chunk = chunks[`${newX - 1},${newY}`]
+        if (oldRelY === 0) {
+            let chunk = chunks[`${oldChunk.x},${oldChunk.y - 1}`]
             if (chunk) chunk.updateNextFrame = true
-        } else if (newX === CHUNKSIZE - 1) {
-            let chunk = chunks[`${newX + 1},${newY}`]
+        } else if (oldRelY === CHUNKSIZE - 1) {
+            let chunk = chunks[`${oldChunk.x},${oldChunk.y + 1}`]
+            if (chunk) chunk.updateNextFrame = true
+        }
+
+        if (newRelX === 0) {
+            let chunk = chunks[`${newChunk.x - 1},${newChunk.y}`]
+            if (chunk) chunk.updateNextFrame = true
+        } else if (newRelX === CHUNKSIZE - 1) {
+            let chunk = chunks[`${newChunk.x + 1},${newChunk.y}`]
             if (chunk) chunk.updateNextFrame = true
         }
         
-        if (newY === 0) {
-            let chunk = chunks[`${newX},${newY - 1}`]
+        if (newRelY === 0) {
+            let chunk = chunks[`${newChunk.x},${newChunk.y - 1}`]
             if (chunk) chunk.updateNextFrame = true
-        } else if (newY === CHUNKSIZE - 1) {
-            let chunk = chunks[`${newX},${newY + 1}`]
+        } else if (newRelY === CHUNKSIZE - 1) {
+            let chunk = chunks[`${newChunk.x},${newChunk.y + 1}`]
             if (chunk) chunk.updateNextFrame = true
-        }*/
-
+        }
 
         if (p) {
             p.x = this.x
@@ -62,8 +67,6 @@ class Element {
 
         oldChunk.updateNextFrame = true
         newChunk.updateNextFrame = true
-        oldChunk.updateAdjacentChunks()
-        newChunk.updateAdjacentChunks()
 
     }
 }
