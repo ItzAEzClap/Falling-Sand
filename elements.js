@@ -217,6 +217,9 @@ function spawnCluster() {
                 case 2:
                     partical = new Water()
                     break
+                default:
+                    return
+                    break
             }
 
             partical.x = x
@@ -231,7 +234,7 @@ function spawnCluster() {
 function getElementAtCell(x, y) {
     let chunk = getChunk(x, y)
     if (!chunk) return new ImmovableSolid()
-    return getChunk(x, y).elements[getElementPos(x, y)]
+    return chunk.elements[getElementPos(x, y)]
 }
 
 function getChunk(x, y) {
