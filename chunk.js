@@ -50,7 +50,6 @@ class Chunk {
         this.hasUpdatedFrameBuffer = false
 
         let elementsToUpdate = this.elements.filter(element => element && !(element instanceof ImmovableSolid))
-
         for (let i = 0; i < elementsToUpdate.length; i += 2) {
             let element = elementsToUpdate[i]
             if (element.hasUpdated) continue

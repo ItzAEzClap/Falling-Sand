@@ -14,7 +14,7 @@ const FPS = 60
 const MOUSESIZE = 5
 const mouse = { x: 0, y: 0, down: false }
 
-let particleType = 1
+let elementType = 1
 const player = new Player()
 const keys_pressed = {}
 const chunks = {}
@@ -41,16 +41,23 @@ function update() {
     player.move()
     if (mouse.down) spawnCluster()
 
+    for (let particle of particles) {
+        particle.update()
+    }
+
     let updateChunks = Object.values(chunks).filter(e => e.updateThisFrame)
         .sort((a, b) => Math.sqrt((player.x - a.x * CHUNKSIZE) ** 2 + (player.y - a.y * CHUNKSIZE) ** 2) 
                         - Math.sqrt((player.x - b.x * CHUNKSIZE) ** 2 + (player.y - b.y * CHUNKSIZE) ** 2))
 
     for (let i = 0; i < updateChunks.length; i += 2) updateChunks[i].update()
     for (let i = 1; i < updateChunks.length; i += 2) updateChunks[i].update()
+
+
+
     Object.values(chunks).forEach(chunk => {
         chunk.shiftUpdateSchedule()
     })
-    
+
     for (let i = updatedElements.length - 1; i >= 0; i--) {
         updatedElements[i].hasUpdated = false
         updatedElements.pop()
@@ -61,8 +68,7 @@ function draw() {
     renderC.imageSmoothingEnabled = false
     renderC.clearRect(0, 0, renderCanvas.width, renderCanvas.height)
     c.clearRect(0, 0, canvas.width, canvas.height)
-    
-    c.beginPath()
+
     let offX = ~~(player.x / CHUNKSIZE)
     let offY = ~~(player.y / CHUNKSIZE)
     for (let y = -1; y < STANDARDY * RENDERSCALE / CHUNKSIZE + 1; y++) {
@@ -71,13 +77,18 @@ function draw() {
             if (chunk) chunk.draw()
         }
     }
-    
+    particles.forEach(particle => {
+        c.beginPath()
+        c.fillStyle = `rgb(${particle.colData[0]}, ${particle.colData[1]}, ${particle.colData[2]})`
+        c.fillRect(particle.drawX, particle.drawY, 1, 1)
+    })
+    /*
     c.beginPath()
     c.lineWidth = 1
     c.strokeStyle = "black"
     c.rect(mouse.x - MOUSESIZE / 2, mouse.y - MOUSESIZE / 2, MOUSESIZE, MOUSESIZE)
     c.stroke()
-    
+    */
     // Draw upscale
     renderC.drawImage(canvas, 0, 0, renderCanvas.width, renderCanvas.height)
     renderC.drawText(`${~~currentFPS}`, 50, 50, "60px Arial")

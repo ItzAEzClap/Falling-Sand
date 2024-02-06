@@ -1,10 +1,10 @@
 class Element {
-    constructor(x, y) {
+    constructor(x, y, col) {
         this.x = x
         this.y = y
         this.velY = 1
         this.hasUpdated = false
-        this.colData = [255, 255, 255]
+        this.colData = col || [255, 255, 255]
     }
 
     step() {}
@@ -69,6 +69,11 @@ class Element {
         oldChunk.updateNextFrame = true
         newChunk.updateNextFrame = true
 
+    }
+
+    convertToPartical(vel) {
+        particles.push(new Particle(this.x, this.y, this.colData, vel, this.constructor))
+        getChunk(this.x, this.y).elements[getElementPos(this.x, this.y)] = undefined
     }
 }
 
@@ -226,27 +231,34 @@ function spawnCluster() {
             if (!chunk) continue
 
             let pos = getElementPos(x, y)
-            let partical = chunk.elements[pos]
-            if (partical) continue
+            let element = chunk.elements[pos]
+            if (element) continue
 
-            switch (particleType) {
+            element = new Sand(x, y)
+            chunk.elements[pos] = element
+            chunk.updateNextFrame = true
+            chunk.hasUpdatedFrameBuffer = false
+            element.convertToPartical({ x: 1, y: 0 })
+            mouse.down = false
+            return
+            
+
+            switch (elementType) {
                 case 0:
-                    partical = new Stone()
+                    element = new Stone(x, y)
                     break
                 case 1:
-                    partical = new Sand()
+                    element = new Sand(x, y)
                     break
                 case 2:
-                    partical = new Water()
+                    element = new Water(x, y)
                     break
                 default:
                     return
                     break
             }
 
-            partical.x = x
-            partical.y = y
-            chunk.elements[pos] = partical
+            chunk.elements[pos] = element
             chunk.updateNextFrame = true
             chunk.hasUpdatedFrameBuffer = false
         }
