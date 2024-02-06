@@ -130,7 +130,6 @@ class Sand extends MovableSolid {
     step() {
         if (this.moveDown()) {}
         else if (this.moveDownSide()) {}
-        this.hasUpdated = true
     }
 }
 
@@ -204,7 +203,6 @@ class Water extends Liquid {
     step() {
         if (this.moveDown()) {}
         else if (this.moveSide()) {}
-        this.hasUpdated = true
     }
 }
 

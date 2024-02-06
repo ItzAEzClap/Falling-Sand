@@ -18,6 +18,7 @@ let particleType = 1
 const player = new Player()
 const keys_pressed = {}
 const chunks = {}
+const updatedElements = []
 const particles = []
 const CHUNKSIZE = 32
 const GRIDWITDH = 5
@@ -43,12 +44,17 @@ function update() {
     let updateChunks = Object.values(chunks).filter(e => e.updateThisFrame)
         .sort((a, b) => Math.sqrt((player.x - a.x * CHUNKSIZE) ** 2 + (player.y - a.y * CHUNKSIZE) ** 2) 
                         - Math.sqrt((player.x - b.x * CHUNKSIZE) ** 2 + (player.y - b.y * CHUNKSIZE) ** 2))
+
     for (let i = 0; i < updateChunks.length; i += 2) updateChunks[i].update()
     for (let i = 1; i < updateChunks.length; i += 2) updateChunks[i].update()
     Object.values(chunks).forEach(chunk => {
         chunk.shiftUpdateSchedule()
-        chunk.elements.forEach(element => { if (element) element.hasUpdated = false })
     })
+    
+    for (let i = updatedElements.length - 1; i >= 0; i--) {
+        updatedElements[i].hasUpdated = false
+        updatedElements.pop()
+    }
 }
 
 function draw() {

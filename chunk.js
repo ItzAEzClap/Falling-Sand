@@ -46,20 +46,25 @@ class Chunk {
 
     update() {
         // Should add particles
-
         if (!this.updateThisFrame) return
         this.hasUpdatedFrameBuffer = false
 
-        for (let i = 0; i < this.elements.length; i += 2) {
-            let element = this.elements[i]
-            if (!element || element.hasUpdated) continue
+        let elementsToUpdate = this.elements.filter(element => element && !(element instanceof ImmovableSolid))
+
+        for (let i = 0; i < elementsToUpdate.length; i += 2) {
+            let element = elementsToUpdate[i]
+            if (element.hasUpdated) continue
             element.step()
+            element.hasUpdated = true
+            updatedElements.push(element)
         }
 
-        for (let i = 1; i < this.elements.length; i += 2) {
-            let element = this.elements[i]
-            if (!element || element.hasUpdated) continue
+        for (let i = 1; i < elementsToUpdate.length; i += 2) {
+            let element = elementsToUpdate[i]
+            if (element.hasUpdated) continue
             element.step()
+            element.hasUpdated = true
+            updatedElements.push(element)
         }
     }
 
