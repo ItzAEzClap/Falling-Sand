@@ -2,6 +2,7 @@ class Element {
     constructor(x, y) {
         this.x = x
         this.y = y
+        this.velY = 1
         this.hasUpdated = false
         this.colData = [255, 255, 255]
     }
@@ -83,9 +84,23 @@ class MovableSolid extends Solid {
     }
 
     moveDown() {
-        let down = getElementAtCell(this.x, this.y + 1)
-        if (!down || down instanceof Liquid) { this.moveTo(this.x, this.y + 1) }
-        return !down
+        let maxY = 0
+        let down
+
+        for (let i = 1; i < 1 + ~~this.velY; i++) {
+            let nextCell = getElementAtCell(this.x, this.y + i)
+            if (!nextCell || nextCell instanceof Liquid) {
+                maxY = i
+                down = nextCell
+            }
+            else break
+        }
+
+        if (maxY === 0) return false
+
+        this.velY += GRAVITY
+        this.moveTo(this.x, this.y + maxY)
+        return true
     }
 
     moveDownSide() {
@@ -142,9 +157,18 @@ class Liquid extends Element {
     }
 
     moveDown() {
-        let down = getElementAtCell(this.x, this.y + 1)
-        if (!down) { this.moveTo(this.x, this.y + 1) }
-        return !down
+        let maxY = 0
+
+        for (let i = 1; i < 1 + ~~this.velY; i++) {
+            if (getElementAtCell(this.x, this.y + i)) break
+            maxY = i
+        }
+
+        if (maxY === 0) return false
+
+        this.velY += GRAVITY
+        this.moveTo(this.x, this.y + maxY)
+        return true
     }
 
     moveSide() {
