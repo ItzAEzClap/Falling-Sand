@@ -8,6 +8,7 @@ renderCanvas.style.zIndex = "0"
 const STANDARDX = 16
 const STANDARDY = 9
 const RENDERSCALE = 15
+let scale = 1
 
 const FPS = 60
 const MOUSESIZE = 5
