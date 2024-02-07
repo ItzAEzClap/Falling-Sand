@@ -26,7 +26,8 @@ class Particle {
         }            
 
         let k = (shortest === 0 || longest === 0) ? 0 : shortest / longest
-        for (let i = 1; i <= Math.ceil(longest); i++) {
+        let end = ~~longest + (longest % 1 === 0 ? 0 : 1)
+        for (let i = 1; i <= end; i++) {
             let delta = i
             if (i > longest) delta = i
 
