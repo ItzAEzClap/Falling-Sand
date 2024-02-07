@@ -256,9 +256,9 @@ function spawnCluster() {
 
 
             chunk.elements[pos] = element
-            if (partical) element.convertToPartical({ x: randomFloatFromRange(-1.5, 1.5), y: randomFloatFromRange(-1, 1) })
-            chunk.updateNextFrame = true
-            chunk.hasUpdatedFrameBuffer = false
+            if (partical) {
+                element.convertToPartical({ x: randomFloatFromRange(-1.5, 1.5), y: randomFloatFromRange(-1, 1) })
+            } else chunk.updateNextFrame = true
         }
     }
 }

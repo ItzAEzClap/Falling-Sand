@@ -66,7 +66,8 @@ class Particle {
         if (this.vel.x === 0 && this.vel.y === 0) return // Didn't move
         this.move()
 
-        getChunk(this.drawX, this.drawY).updateNextFrame = true
+        getChunk(this.prevDrawX, this.prevDrawY).hasUpdatedFrameBuffer = false
+        getChunk(this.drawX, this.drawY).hasUpdatedFrameBuffer = false
     }
 
     convertToElement() {
