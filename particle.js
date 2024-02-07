@@ -16,22 +16,30 @@ class Particle {
         let signX = this.vel.x < 0 ? -1 : 1
         let signY = this.vel.y < 0 ? -1 : 1
 
-        let longest = Math.abs(this.vel.x)
-        let shortest = Math.abs(this.vel.y)
+        let longest = this.vel.x * signX
+        let shortest = this.vel.y * signY
         let xLargest = longest > shortest
-        if (!xLargest) [shortest, longest] = [longest, shortest]
+        if (!xLargest) {
+            let temp = longest
+            longest = shortest
+            shortest = temp
+        }            
 
         let k = (shortest === 0 || longest === 0) ? 0 : shortest / longest
         for (let i = 1; i <= Math.ceil(longest); i++) {
             let delta = i
             if (i > longest) delta = i
 
-            let x = i
-            let y = k * i
-            if (!xLargest) [x, y] = [y, x]
+            let x = delta
+            let y = k * delta
+            if (!xLargest) {
+                let temp = x
+                x = y
+                y = temp
+            }
 
-            let newX = Math.round(this.x + x * signX)
-            let newY = Math.round(this.y + y * signY)
+            let newX = ~~(this.x + x * signX + 0.5)
+            let newY = ~~(this.y + y * signY + 0.5)
             let element = getElementAtCell(newX, newY)
             if (element) return false
             this.drawX = newX

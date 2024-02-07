@@ -24,15 +24,17 @@ class Chunk {
             }
         }
 
-        for (let particle of particles) {
-            if (this !== getChunk(particle.drawX, particle.drawY)) continue
+        let particlesInChunk = particles.filter(particle => particle.drawX >= this.x * CHUNKSIZE &&
+                    particle.drawX < CHUNKSIZE * (this.x + 1) &&
+                    particle.drawY >= this.y * CHUNKSIZE &&
+                    particle.drawY < CHUNKSIZE * (this.y + 1))
 
+        for (let particle of particlesInChunk) {
             let i = getElementPos(particle.drawX, particle.drawY) * 4
             for (let j = 0; j < 4; j++) {
                 this.frameBuffer.data[i + j] = particle?.colData[j] ?? 255
             }
         }
-
 
         this.hasUpdatedFrameBuffer = true
     }
