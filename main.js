@@ -41,9 +41,7 @@ function update() {
     player.move()
     if (mouse.down) spawnCluster()
 
-    for (let particle of particles) {
-        particle.update()
-    }
+    for (let particle of particles) particle.update()
 
     let updateChunks = Object.values(chunks).filter(e => e.updateThisFrame)
         .sort((a, b) => Math.sqrt((player.x - a.x * CHUNKSIZE) ** 2 + (player.y - a.y * CHUNKSIZE) ** 2) 
@@ -77,18 +75,12 @@ function draw() {
             if (chunk) chunk.draw()
         }
     }
-    particles.forEach(particle => {
-        c.beginPath()
-        c.fillStyle = `rgb(${particle.colData[0]}, ${particle.colData[1]}, ${particle.colData[2]})`
-        c.fillRect(particle.drawX, particle.drawY, 1, 1)
-    })
-    /*
     c.beginPath()
     c.lineWidth = 1
     c.strokeStyle = "black"
     c.rect(mouse.x - MOUSESIZE / 2, mouse.y - MOUSESIZE / 2, MOUSESIZE, MOUSESIZE)
     c.stroke()
-    */
+
     // Draw upscale
     renderC.drawImage(canvas, 0, 0, renderCanvas.width, renderCanvas.height)
     renderC.drawText(`${~~currentFPS}`, 50, 50, "60px Arial")
@@ -122,7 +114,7 @@ function init() {
 
 window.onkeydown = (e) => {
     if (e.code.search(/Digit/) !== -1) {
-        particleType = parseInt(e.key)
+        elementType = parseInt(e.key)
     }
     keys_pressed[e.key.toLowerCase()] = true
 }

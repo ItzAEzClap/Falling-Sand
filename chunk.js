@@ -13,17 +13,27 @@ class Chunk {
 
     buildFrameBuffer() {
         // Should add particles
-
         for (let y = 0; y < CHUNKSIZE; y++) {
             for (let x = 0; x < CHUNKSIZE; x++) {
                 let i = (x + y * CHUNKSIZE) * 4
                 let pixel = this.elements[x + y * CHUNKSIZE]
-                this.frameBuffer.data[i] = pixel?.colData[0] ?? 255
-                this.frameBuffer.data[i + 1] = pixel?.colData[1] ?? 255
-                this.frameBuffer.data[i + 2] = pixel?.colData[2] ?? 255
-                this.frameBuffer.data[i + 3] = 255
+
+                for (let j = 0; j < 4; j++) {
+                    this.frameBuffer.data[i + j] = pixel?.colData[j] ?? 255
+                }
             }
         }
+
+        for (let particle of particles) {
+            if (this !== getChunk(particle.drawX, particle.drawY)) continue
+
+            let i = getElementPos(particle.drawX, particle.drawY) * 4
+            for (let j = 0; j < 4; j++) {
+                this.frameBuffer.data[i + j] = particle?.colData[j] ?? 255
+            }
+        }
+
+
         this.hasUpdatedFrameBuffer = true
     }
 

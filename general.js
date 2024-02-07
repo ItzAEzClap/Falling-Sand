@@ -33,6 +33,10 @@ function fixCanvas() {
     }
 }
 
+function randomFloatFromRange(min, max) {
+    return min + Math.random() * (max - min)
+}
+
 CanvasRenderingContext2D.prototype.drawText = function (text, x, y, fontSize, align, color, shadow) {
     this.font = fontSize + "px verdanai";
     this.fillStyle = "gray";

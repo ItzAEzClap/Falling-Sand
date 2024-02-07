@@ -233,15 +233,7 @@ function spawnCluster() {
             let pos = getElementPos(x, y)
             let element = chunk.elements[pos]
             if (element) continue
-
-            element = new Sand(x, y)
-            chunk.elements[pos] = element
-            chunk.updateNextFrame = true
-            chunk.hasUpdatedFrameBuffer = false
-            element.convertToPartical({ x: 1, y: 0 })
-            mouse.down = false
-            return
-            
+            let partical = false
 
             switch (elementType) {
                 case 0:
@@ -253,12 +245,18 @@ function spawnCluster() {
                 case 2:
                     element = new Water(x, y)
                     break
+                case 3:
+                    partical = true
+                    element = new Water(x, y)
+                    break
                 default:
                     return
                     break
             }
 
+
             chunk.elements[pos] = element
+            if (partical) element.convertToPartical({ x: randomFloatFromRange(-1.5, 1.5), y: randomFloatFromRange(-1, 1) })
             chunk.updateNextFrame = true
             chunk.hasUpdatedFrameBuffer = false
         }
