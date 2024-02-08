@@ -10,7 +10,7 @@ class Particle {
         this.colData = col
         this.vel = vel || { x: 0, y: 0 }
         this.constructor = constructor
-        this.maxSurviveRange = 10
+        this.maxSurviveRadius = 5
     }
 
     /* https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm */
@@ -52,6 +52,16 @@ class Particle {
         return true
     }
 
+    canMoveThere(x, y) {
+        let tx = this.x
+        let ty = this.y
+        this.x = x
+        this.y = y
+        let result = this.bresenhamMove()
+        this.x = tx
+        this.y = ty
+        return result
+    }
 
 
     move() {
@@ -75,14 +85,33 @@ class Particle {
             return
         }
 
-        // Just remove it
+        // Old space is taken
+
+        // Top and bottom of square
+        let startY = ~~(this.y - this.maxSurviveRadius)
+        let startX = ~~(this.x - this.maxSurviveRadius)
+        let endX = ~~(this.x + this.maxSurviveRadius)
+
+        for (let x = startX; x <= endX; x++) {
+            let y1 = startY
+            let y2 = startY + this.maxSurviveRadius * 2
+
+            
+        }
+
+        // Middle Part
+        for (let y = start; y <= end; y++) {
+            let x1 = ~~(this.x - this.maxSurviveRadius)
+            let x2 = ~~(this.x + this.maxSurviveRadius)
+
+
+        }
+
+
+        console.log("Failed to move")
+
         particles.splice(particles.indexOf(this), 1)
         getChunk(this.drawX, this.drawY).hasUpdatedFrameBuffer = false
-        console.log("Hi")
-
-        // Old space is taken
-        
-
     }
 
     update() {
