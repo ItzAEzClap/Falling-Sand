@@ -23,7 +23,7 @@ const particles = []
 const CHUNKSIZE = 32
 const GRIDWITDH = 5
 const GRIDHEIGHT = 5
-const GRAVITY = 1 / 20
+const GRAVITY = 1 / 10
 
 let prevTime = 0
 let currentFPS = 144
