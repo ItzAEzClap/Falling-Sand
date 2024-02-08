@@ -10,9 +10,11 @@ class Particle {
         this.colData = col
         this.vel = vel || { x: 0, y: 0 }
         this.constructor = constructor
+        this.maxSurviveRange = 10
     }
 
-    tryMove() {
+    /* https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm */
+    bresenhamMove() {
         let signX = this.vel.x < 0 ? -1 : 1
         let signY = this.vel.y < 0 ? -1 : 1
 
@@ -43,31 +45,53 @@ class Particle {
             let newY = ~~(this.y + y * signY + 0.5)
             let element = getElementAtCell(newX, newY)
             if (element) return false
+
             this.drawX = newX
             this.drawY = newY
         }
         return true
     }
 
+
+
     move() {
         this.vel.y += GRAVITY
+        this.x += this.vel.x
+        this.y += this.vel.y
         this.prevDrawX = this.drawX
         this.prevDrawY = this.drawY
 
-        if (!this.tryMove()) {
+        if (!getElementAtCell(~~this.x, ~~this.y)) {
+            this.drawX = ~~this.x
+            this.drawY = ~~this.y
+            return
+        }
+        
+        this.x -= this.vel.x
+        this.y -= this.vel.y
+
+        if (!getElementAtCell(~~this.x, ~~this.y)) {
             this.convertToElement()
             return
         }
-        this.x += this.vel.x
-        this.y += this.vel.y
+
+        // Just remove it
+        particles.splice(particles.indexOf(this), 1)
+        getChunk(this.drawX, this.drawY).hasUpdatedFrameBuffer = false
+        console.log("Hi")
+
+        // Old space is taken
+        
+
     }
 
     update() {
         if (this.vel.x === 0 && this.vel.y === 0) return // Didn't move
         this.move()
 
-        getChunk(this.prevDrawX, this.prevDrawY).hasUpdatedFrameBuffer = false
+
         getChunk(this.drawX, this.drawY).hasUpdatedFrameBuffer = false
+        getChunk(this.prevDrawX, this.prevDrawY).hasUpdatedFrameBuffer = false
     }
 
     convertToElement() {
