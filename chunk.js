@@ -85,7 +85,7 @@ class Chunk {
         let x = ~~(this.x * CHUNKSIZE - player.x)
         let y = ~~(this.y * CHUNKSIZE - player.y)
         c.putImageData(this.frameBuffer, x, y)
-        c.drawText(`${this.x}, ${this.y}`, x + CHUNKSIZE / 2, y + CHUNKSIZE / 2, 14, "center")
+        c.drawText(`${this.x}, ${this.y}`, (this.x + 0.5) * CHUNKSIZE - player.x, (this.y + 0.5) * CHUNKSIZE - player.y, 12, "center")
 
         if (this.updateThisFrame) {
             c.beginPath()

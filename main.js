@@ -11,7 +11,7 @@ const RENDERSCALE = 15
 let scale = 1
 
 const FPS = 60
-const MOUSESIZE = 5
+const MOUSESIZE = 10
 const mouse = { x: 0, y: 0, down: false }
 
 let elementType = 1
@@ -27,13 +27,17 @@ const GRAVITY = 1 / 10
 
 let prevTime = 0
 let currentFPS = 144
-function animate() {
+let sleepTime = 0
+async function animate() {
     let dt = performance.now() - prevTime
     prevTime += dt
     currentFPS = 1000 / dt
 
+
     update()
     draw()
+
+    //await new Promise(resolve => setTimeout(resolve, sleepTime)) Idk
     requestAnimationFrame(animate)
 }
 
@@ -81,6 +85,7 @@ function draw() {
     c.rect(mouse.x - MOUSESIZE / 2, mouse.y - MOUSESIZE / 2, MOUSESIZE, MOUSESIZE)
     c.stroke()
 
+
     // Draw upscale
     renderC.drawImage(canvas, 0, 0, renderCanvas.width, renderCanvas.height)
     renderC.drawText(`${~~currentFPS}`, 50, 50, "60px Arial")
@@ -98,7 +103,7 @@ function init() {
 
             for (let y = 0; y < CHUNKSIZE; y++) {
                 for (let x = 0; x < CHUNKSIZE; x++) {
-                    if (j < 3 || j >= GRIDHEIGHT - 1 || i < 1 || i >= GRIDWITDH) continue
+                    if (j < 3 || j >= GRIDHEIGHT - 1 || i < 1 || i >= GRIDWITDH - 1) continue
                     chunk.elements[x + y * CHUNKSIZE] = new Stone(x + j * CHUNKSIZE, y + i * CHUNKSIZE)
                 }
             }

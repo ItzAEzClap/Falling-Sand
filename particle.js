@@ -50,19 +50,7 @@ class Particle {
             this.drawY = newY
         }
         return true
-    }
-
-    canMoveThere(x, y) {
-        let tx = this.x
-        let ty = this.y
-        this.x = x
-        this.y = y
-        let result = this.bresenhamMove()
-        this.x = tx
-        this.y = ty
-        return result
-    }
-
+    } 
 
     move() {
         this.vel.y += GRAVITY

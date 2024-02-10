@@ -25,6 +25,19 @@ class Element {
         newChunk.elements[newPos] = this
 
         
+        if (this.x === 0 || this.x === CHUNKSIZE - 1) console.log(this)
+
+        // Does not update diagonally
+
+        // Diagonally
+        if (oldRelX === 0 && oldRelY === 0) {
+            let chunk = chunks[`${oldChunk.x - 1},${oldChunk.y - 1}`]
+            if (chunk) chunk.updateNextFrame = true
+        } else if (oldRelX === CHUNKSIZE - 1 && oldRelY === 0) {
+            let chunk = chunks[`${oldChunk.x + 1},${oldChunk.y - 1}`]
+            if (chunk) chunk.updateNextFrame = true
+        }
+
         // Update adjacent
         if (oldRelX === 0) {
             let chunk = chunks[`${oldChunk.x - 1},${oldChunk.y}`]
@@ -83,6 +96,7 @@ class Solid extends Element {
 }
 
 // Movable solids
+// maxY = 0, should add this.velY = 0
 class MovableSolid extends Solid {
     constructor(x, y) {
         super(x, y)
@@ -90,18 +104,16 @@ class MovableSolid extends Solid {
 
     moveDown() {
         let maxY = 0
-        let down
 
         for (let i = 1; i < 1 + ~~this.velY; i++) {
             let nextCell = getElementAtCell(this.x, this.y + i)
-            if (!nextCell || nextCell instanceof Liquid) {
-                maxY = i
-                down = nextCell
-            }
+            if (!nextCell || nextCell instanceof Liquid) maxY = i
             else break
         }
 
-        if (maxY === 0) return false
+        if (maxY === 0) {
+            return false
+        }
 
         this.velY += GRAVITY
         this.moveTo(this.x, this.y + maxY)
