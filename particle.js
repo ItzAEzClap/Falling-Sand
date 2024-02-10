@@ -10,7 +10,7 @@ class Particle {
         this.colData = col
         this.vel = vel || { x: 0, y: 0 }
         this.constructor = constructor
-        this.maxSurviveRadius = 5
+        this.maxSurviveRadius = 3
     }
 
     /* https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm */
@@ -54,59 +54,58 @@ class Particle {
 
     move() {
         this.vel.y += GRAVITY
-        this.x += this.vel.x
-        this.y += this.vel.y
         this.prevDrawX = this.drawX
         this.prevDrawY = this.drawY
+        this.x += this.vel.x
+        this.y += this.vel.y
 
-        if (!getElementAtCell(~~this.x, ~~this.y)) {
+        // Instant Move
+        let element = getElementAtCell(~~this.x, ~~this.y)
+        if (!element) {
             this.drawX = ~~this.x
             this.drawY = ~~this.y
             return
         }
-        
         this.x -= this.vel.x
         this.y -= this.vel.y
 
-        if (!getElementAtCell(~~this.x, ~~this.y)) {
+        // BresenhamMove
+        this.bresenhamMove()
+        if (this.prevDrawX !== this.drawX || this.prevDrawY !== this.drawY) {
             this.convertToElement()
             return
         }
 
-        // Old space is taken
+        // Closest empty
+        let spacesInRange = []
 
-        // Top and bottom of square
-        let startY = ~~(this.y - this.maxSurviveRadius)
-        let startX = ~~(this.x - this.maxSurviveRadius)
-        let endX = ~~(this.x + this.maxSurviveRadius)
+        for (let dy = -this.maxSurviveRadius; dy <= this.maxSurviveRadius; dy++) {
+            for (let dx = -this.maxSurviveRadius; dx <= this.maxSurviveRadius; dx++) {
+                spacesInRange.push({ x: dx, y: dy, distance: dx ** 2 + dy ** 2 })
+            }
+        }
+        spacesInRange.sort((a, b) => a.distance - b.distance)
 
-        for (let x = startX; x <= endX; x++) {
-            let y1 = startY
-            let y2 = startY + this.maxSurviveRadius * 2
+        for (let space of spacesInRange) {
+            let x = this.drawX + space.x
+            let y = this.drawY + space.y
+            if (getElementAtCell(x, y)) continue
 
-            
+            this.drawX = x
+            this.drawY = y
+            this.convertToElement()
+            return
         }
 
-        // Middle Part
-        for (let y = start; y <= end; y++) {
-            let x1 = ~~(this.x - this.maxSurviveRadius)
-            let x2 = ~~(this.x + this.maxSurviveRadius)
-
-
-        }
-
-
-        console.log("Failed to move")
-
+        // Delete
         particles.splice(particles.indexOf(this), 1)
-        getChunk(this.drawX, this.drawY).hasUpdatedFrameBuffer = false
+        getChunk(this.drawX, this.drawY).updateNextFrame = true
     }
 
     update() {
         if (this.vel.x === 0 && this.vel.y === 0) return // Didn't move
+
         this.move()
-
-
         getChunk(this.drawX, this.drawY).hasUpdatedFrameBuffer = false
         getChunk(this.prevDrawX, this.prevDrawY).hasUpdatedFrameBuffer = false
     }

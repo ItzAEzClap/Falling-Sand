@@ -25,10 +25,6 @@ class Element {
         newChunk.elements[newPos] = this
 
         
-        if (this.x === 0 || this.x === CHUNKSIZE - 1) console.log(this)
-
-        // Does not update diagonally
-
         // Diagonally
         if (oldRelX === 0 && oldRelY === 0) {
             let chunk = chunks[`${oldChunk.x - 1},${oldChunk.y - 1}`]
@@ -165,6 +161,8 @@ class Stone extends ImmovableSolid {
     }
 }
 
+class Border extends ImmovableSolid {}
+
 /* Liquids */
 class Liquid extends Element {
     constructor(x, y, dispertionRate) {
@@ -277,7 +275,7 @@ function spawnCluster() {
 
 function getElementAtCell(x, y) {
     let chunk = getChunk(x, y)
-    if (!chunk) return new ImmovableSolid()
+    if (!chunk) return new Border()
     return chunk.elements[getElementPos(x, y)]
 }
 

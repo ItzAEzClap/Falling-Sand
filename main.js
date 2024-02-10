@@ -11,7 +11,7 @@ const RENDERSCALE = 15
 let scale = 1
 
 const FPS = 60
-const MOUSESIZE = 10
+const MOUSESIZE = 5
 const mouse = { x: 0, y: 0, down: false }
 
 let elementType = 1
