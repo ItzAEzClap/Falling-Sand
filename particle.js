@@ -41,8 +41,8 @@ class Particle {
                 y = temp
             }
 
-            let newX = ~~(this.x + x * signX + 0.5)
-            let newY = ~~(this.y + y * signY + 0.5)
+            let newX = ~~(this.x + signX * (x + 0.5))
+            let newY = ~~(this.y + signY * (y + 0.5))
             let element = getElementAtCell(newX, newY)
             if (element) return false
 
@@ -69,12 +69,13 @@ class Particle {
         this.x -= this.vel.x
         this.y -= this.vel.y
 
-        // BresenhamMove
+        // BresenhamMove - More precise but slower
+        /*
         this.bresenhamMove()
         if (this.prevDrawX !== this.drawX || this.prevDrawY !== this.drawY) {
             this.convertToElement()
             return
-        }
+        }*/
 
         // Closest empty
         let spacesInRange = []
