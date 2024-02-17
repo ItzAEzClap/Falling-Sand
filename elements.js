@@ -99,19 +99,20 @@ class MovableSolid extends Solid {
     }
 
     moveDown() {
+        this.velY += GRAVITY
         let maxY = 0
 
-        for (let i = 1; i < 1 + ~~this.velY; i++) {
+        for (let i = 1; i <= 1 + ~~this.velY; i++) {
             let nextCell = getElementAtCell(this.x, this.y + i)
             if (!nextCell || nextCell instanceof Liquid) maxY = i
             else break
         }
 
         if (maxY === 0) {
+            this.velY = 0
             return false
         }
 
-        this.velY += GRAVITY
         this.moveTo(this.x, this.y + maxY)
         return true
     }
@@ -141,8 +142,8 @@ class Sand extends MovableSolid {
     }
 
     step() {
-        if (this.moveDown()) {}
-        else if (this.moveDownSide()) {}
+        if (this.moveDown()) return
+        if (this.moveDownSide()) return
     }
 }
 
