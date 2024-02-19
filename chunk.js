@@ -44,18 +44,6 @@ class Chunk {
         this.updateNextFrame = false
     }
 
-    updateAdjacentChunks() {
-        let up = chunks[`${this.x},${this.y - 1}`]
-        let down = chunks[`${this.x},${this.y + 1}`]
-        let left = chunks[`${this.x - 1},${this.y}`]
-        let right = chunks[`${this.x + 1},${this.y}`]
-
-        if (up) up.updateNextFrame = true
-        if (down) down.updateNextFrame = true
-        if (left) left.updateNextFrame = true
-        if (right) right.updateNextFrame = true
-    }
-
     update() {
         // Should add particles
         if (!this.updateThisFrame) return
