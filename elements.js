@@ -29,22 +29,6 @@ class Element {
         newChunk.elements[newPos] = this
         newChunk.updateNextFrame = true
 
-        // Switch position values
-        if (particle) {
-            particle.x = this.x
-            particle.y = this.y
-            particle.chunk = this.chunk
-            particle.relativeX = this.relativeX
-            particle.relativeY = this.relativeY
-        }
-
-        this.x = newX
-        this.y = newY
-        this.relativeX = newRelX
-        this.relativeY = newRelY
-        this.chunk.updateNextFrame = true
-        this.chunk = newChunk
-
         /* Update chunks close */
 
         // Diagonally
@@ -88,6 +72,22 @@ class Element {
             let chunk = chunks[`${newChunk.x},${newChunk.y + 1}`]
             if (chunk) chunk.updateNextFrame = true
         }
+
+        /* Switch position values */
+        if (particle) {
+            particle.x = this.x
+            particle.y = this.y
+            particle.chunk = this.chunk
+            particle.relativeX = this.relativeX
+            particle.relativeY = this.relativeY
+        }
+
+        this.x = newX
+        this.y = newY
+        this.relativeX = newRelX
+        this.relativeY = newRelY
+        this.chunk.updateNextFrame = true
+        this.chunk = newChunk
     }
 
     convertToPartical(vel) {
@@ -148,7 +148,7 @@ class MovableSolid extends Solid {
 class Sand extends MovableSolid {
     constructor(x, y) {
         super(x, y)
-        this.colData = [194, 178, 128]
+        this.colData = randomizeColor([194, 178, 129], 15)
     }
 
     step() {
@@ -240,10 +240,6 @@ class Water extends Liquid {
 
 
 
-
-
-
-
 /* Functions */
 function spawnCluster() {
     let offX = ~~(mouse.x + player.x)
@@ -311,4 +307,8 @@ function getElementPos(x, y) {
 
 function mod(n, base) {
     return ((n % base) + base) % base
+}
+
+function randomizeColor(colData, offset) {
+    return colData.map(colorComponent => colorComponent + ~~(offset * (Math.random() - 0.5)))
 }
