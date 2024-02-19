@@ -309,6 +309,7 @@ function mod(n, base) {
     return ((n % base) + base) % base
 }
 
-function randomizeColor(colData, offset) {
-    return colData.map(colorComponent => colorComponent + ~~(offset * (Math.random() - 0.5)))
+function randomizeColor(colData, range, useSameOffset = false) {
+    const CONSTANTOFFSET = range * Math.random() - 0.5
+    return colData.map(colorComponent => colorComponent + ~~(useSameOffset ? CONSTANTOFFSET : range * (Math.random() - 0.5)))
 }
