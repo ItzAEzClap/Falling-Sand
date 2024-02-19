@@ -6,8 +6,8 @@ class Element {
         this.hasUpdated = false
         this.colData = col || [255, 255, 255]
 
-        this.relativeX, this.relativeY
-        this.updateRelativePos()
+        this.relativeX = mod(this.x, CHUNKSIZE)
+        this.relativeY = mod(this.y, CHUNKSIZE)
         this.chunk = getChunkWithRelCoord(this.x, this.y, this.relativeX, this.relativeY)
     }
 
