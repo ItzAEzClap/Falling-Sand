@@ -148,7 +148,7 @@ class MovableSolid extends Solid {
 class Sand extends MovableSolid {
     constructor(x, y) {
         super(x, y)
-        this.colData = randomizeColor([194, 178, 129], 15)
+        this.colData = randomizeColor([194, 178, 129], 15, true)
     }
 
     step() {
@@ -226,7 +226,7 @@ class Liquid extends Element {
 class Water extends Liquid {
     constructor(x, y) {
         super(x, y, 10)
-        this.colData = [20, 20, 230]
+        this.colData = [100, 100, 230]
     }
 
     step() {

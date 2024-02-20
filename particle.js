@@ -13,44 +13,38 @@ class Particle {
         this.maxSurviveRadius = 3
     }
 
-    /* https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm */
+    /* https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm */     
     bresenhamMove() {
-        let signX = this.vel.x < 0 ? -1 : 1
-        let signY = this.vel.y < 0 ? -1 : 1
+        let dx = endX - startX
+        let dy = endY - startY
+        let signX = dx < 0 ? -1 : 1
+        let signY = dy < 0 ? -1 : 1
 
-        let longest = this.vel.x * signX
-        let shortest = this.vel.y * signY
+        let longest = dx * signX
+        let shortest = dy * signY
         let xLargest = longest > shortest
-        if (!xLargest) {
-            let temp = longest
-            longest = shortest
-            shortest = temp
-        }            
-
+        if (!xLargest) [shortest, longest] = [longest, shortest]
         let k = (shortest === 0 || longest === 0) ? 0 : shortest / longest
-        let end = ~~longest + (longest % 1 === 0 ? 0 : 1)
-        for (let i = 1; i <= end; i++) {
-            let delta = i
-            if (i > longest) delta = i
 
-            let x = delta
-            let y = k * delta
-            if (!xLargest) {
-                let temp = x
-                x = y
-                y = temp
-            }
 
-            let newX = ~~(this.x + signX * (x + 0.5))
-            let newY = ~~(this.y + signY * (y + 0.5))
-            let element = getElementAtCell(newX, newY)
-            if (element) return false
+        let maxX = this.drawX
+        let maxY = this.drawY
+        for (let i = 0.5; i <= longest + 0.5; i++) {
+            let dI = Math.min(i, longest)
 
-            this.drawX = newX
-            this.drawY = newY
+            let x = dI
+            let y = dI * k
+            if (!xLargest) [x, y] = [y, x]
+
+            let newX = ~~(startX + x * signX)
+            let newY = ~~(startY + y * signY)
+            if (!getElementAtCell(newX, newY)) continue
+
+            maxX = newX
+            maxY = newY
         }
-        return true
-    } 
+        return [maxX, maxY]
+    }
 
     move() {
         this.vel.y += GRAVITY
@@ -71,34 +65,41 @@ class Particle {
 
         // BresenhamMove - More precise but slower
         /*
-        this.bresenhamMove()
-        if (this.prevDrawX !== this.drawX || this.prevDrawY !== this.drawY) {
+        let [x, y] = this.bresenhamMove()
+        if (x !== this.drawX || y !== this.drawY) {
             this.convertToElement()
             return
         }*/
 
         // Closest empty
-        let spacesInRange = []
+        for (let dy = 0; dy <= this.maxSurviveRadius; dy++) {
+            for (let dx = 0; dx <= this.maxSurviveRadius; dx++) {
+                if (dy === 0 && dx === 0) continue
 
-        for (let dy = -this.maxSurviveRadius; dy <= this.maxSurviveRadius; dy++) {
-            for (let dx = -this.maxSurviveRadius; dx <= this.maxSurviveRadius; dx++) {
-                spacesInRange.push({ x: dx, y: dy, distance: dx ** 2 + dy ** 2 })
+                let topLeft = getElementAtCell(this.drawX - dx, this.drawY - dy)
+                let topRight = getElementAtCell(this.drawX + dx, this.drawY - dy)
+                let bottomLeft = getElementAtCell(this.drawX - dx, this.drawY + dy)
+                let bottomRight = getElementAtCell(this.drawX + dx, this.drawY + dy)
+
+                if (!topLeft) {
+                    this.drawX -= dx
+                    this.drawY -= dy
+                } else if (!topRight) {
+                    this.drawX += dx
+                    this.drawY -= dy
+                } else if (!bottomLeft) {
+                    this.drawX -= dx
+                    this.drawY += dy
+                } else if (!bottomRight) {
+                    this.drawX += dx
+                    this.drawY += dy
+                } else continue
+
+                this.convertToElement()
+                return
             }
         }
-        spacesInRange.sort((a, b) => a.distance - b.distance)
 
-        for (let space of spacesInRange) {
-            let x = this.drawX + space.x
-            let y = this.drawY + space.y
-            if (getElementAtCell(x, y)) continue
-
-            this.drawX = x
-            this.drawY = y
-            this.convertToElement()
-            return
-        }
-
-        // Delete
         particles.splice(particles.indexOf(this), 1)
         getChunk(this.drawX, this.drawY).updateNextFrame = true
     }
